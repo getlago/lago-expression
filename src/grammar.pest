@@ -1,0 +1,33 @@
+function = { function_name ~ "(" ~ function_args ~ ")" }
+
+function_name = _{ ceil | concat | round }
+ceil          =  { "ceil" }
+concat        =  { "concat" }
+round         =  { "round" }
+
+function_args = _{ expr ~ ("," ~ expr)* }
+
+string = ${ "'" ~ string_contents ~ "'" }
+
+string_contents = @{ (!"'" ~ ANY)* }
+
+variable = @{ "event." ~ ASCII_ALPHA ~ (ASCII_ALPHANUMERIC | "_" | ".")* }
+decimal  = @{ (ASCII_DIGIT | ".")+ }
+
+unary_minus =  { "-" }
+primary     = _{ function | variable | decimal | string | "(" ~ expr ~ ")" }
+atom        = _{ unary_minus? ~ primary }
+
+bin_op   = _{ add | subtract | multiply | divide }
+add      =  { "+" }
+subtract =  { "-" }
+multiply =  { "*" }
+divide   =  { "/" }
+
+expr = { atom ~ (bin_op ~ atom)* }
+
+WHITESPACE = _{ " " }
+
+// We can't have SOI and EOI on expr directly, because it is used
+// recursively (e.g. with parentheses)
+root = _{ SOI ~ expr ~ EOI }
