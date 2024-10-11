@@ -18,8 +18,15 @@ pub enum Function {
 }
 
 #[derive(Debug, PartialEq)]
+pub enum EventAttribute {
+    Code,
+    Timestamp,
+    Properties(String),
+}
+
+#[derive(Debug, PartialEq)]
 pub enum Expression {
-    Variable(String),
+    EventAttribute(EventAttribute),
     Function(Function),
     String(String),
     Decimal(BigDecimal),
@@ -58,6 +65,11 @@ pub fn parse_function(pairs: Pairs<Rule>) -> Function {
     }
 }
 
+pub fn parse_event_attribute(pairs: Pairs<Rule>) -> EventAttribute {
+    dbg!(&pairs);
+    EventAttribute::Code
+}
+
 pub fn parse_expr(pairs: Pairs<Rule>) -> Expression {
     PrattParser::new()
         // Addition and subtract have equal precedence
@@ -68,7 +80,9 @@ pub fn parse_expr(pairs: Pairs<Rule>) -> Expression {
             Rule::function => Expression::Function(parse_function(primary.into_inner())),
             Rule::decimal => Expression::Decimal(primary.as_str().parse().unwrap()),
             Rule::expr => parse_expr(primary.into_inner()),
-            Rule::variable => Expression::Variable(primary.as_str().to_owned()),
+            Rule::variable => {
+                Expression::EventAttribute(parse_event_attribute(primary.into_inner()))
+            }
             Rule::string => Expression::String(primary.into_inner().as_str().to_owned()),
             rule => unreachable!("Expr::parse expected atom, found {:?}", rule),
         })

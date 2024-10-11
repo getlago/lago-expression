@@ -1,14 +1,22 @@
 use std::{collections::HashMap, fmt::Display};
 
 use bigdecimal::BigDecimal;
+use serde::Deserialize;
 use thiserror::Error;
 
-use crate::parser::{Expression, Function, Operation};
+use crate::parser::{EventAttribute, Expression, Function, Operation};
 
 #[derive(Debug)]
 pub enum ExpressionValue {
     Number(BigDecimal),
     String(String),
+}
+
+#[derive(Debug, PartialEq, Deserialize)]
+pub struct Event {
+    code: String,
+    timestamp: u64,
+    properties: HashMap<String, String>,
 }
 
 impl ExpressionValue {
@@ -55,7 +63,7 @@ impl Display for ExpressionValue {
 }
 
 impl Function {
-    pub fn evaluate(&self, map: &HashMap<String, String>) -> EvaluationResult<ExpressionValue> {
+    pub fn evaluate(&self, _event: &Event) -> EvaluationResult<ExpressionValue> {
         match self {
             Function::Concat(_) => todo!(),
             Function::Ceil(_) => todo!(),
@@ -64,21 +72,33 @@ impl Function {
     }
 }
 
+impl EventAttribute {
+    pub fn evaluate(&self, event: &Event) -> EvaluationResult<ExpressionValue> {
+        let evaluated_attribute = match self {
+            EventAttribute::Code => event.code.to_owned().into(),
+            EventAttribute::Timestamp => ExpressionValue::Number(event.timestamp.into()),
+            EventAttribute::Properties(name) => event
+                .properties
+                .get(name)
+                .ok_or(ExpressionError::MissingVariable(name.clone()))?
+                .clone()
+                .into(),
+        };
+        Ok(evaluated_attribute)
+    }
+}
+
 impl Expression {
-    pub fn evaluate(&self, map: &HashMap<String, String>) -> EvaluationResult<ExpressionValue> {
+    pub fn evaluate(&self, event: &Event) -> EvaluationResult<ExpressionValue> {
         let evaluated_expr = match self {
-            Expression::Variable(name) => ExpressionValue::String(
-                map.get(name)
-                    .ok_or(ExpressionError::MissingVariable(name.clone()))?
-                    .to_owned(),
-            ),
-            Expression::Function(f) => f.evaluate(map)?,
+            Expression::EventAttribute(attr) => attr.evaluate(event)?,
+            Expression::Function(f) => f.evaluate(event)?,
             Expression::String(s) => s.clone().into(),
             Expression::Decimal(d) => d.clone().into(),
             Expression::UnaryMinus(inner) => {
-                ExpressionValue::Number(-(inner.evaluate(map)?.to_decimal()?))
+                ExpressionValue::Number(-(inner.evaluate(event)?.to_decimal()?))
             }
-            Expression::BinOp { lhs, op, rhs } => op.evaluate(lhs.as_ref(), rhs.as_ref(), map)?,
+            Expression::BinOp { lhs, op, rhs } => op.evaluate(lhs.as_ref(), rhs.as_ref(), event)?,
         };
 
         Ok(evaluated_expr)
@@ -90,10 +110,10 @@ impl Operation {
         &self,
         lhs: &Expression,
         rhs: &Expression,
-        map: &HashMap<String, String>,
+        event: &Event,
     ) -> EvaluationResult<ExpressionValue> {
-        let lhs_decimal = lhs.evaluate(map)?.to_decimal()?;
-        let rhs_decimal = rhs.evaluate(map)?.to_decimal()?;
+        let lhs_decimal = lhs.evaluate(event)?.to_decimal()?;
+        let rhs_decimal = rhs.evaluate(event)?.to_decimal()?;
 
         let evaluated = match self {
             Operation::Add => lhs_decimal + rhs_decimal,
