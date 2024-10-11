@@ -1,10 +1,9 @@
+use parser::ParseResult;
 pub use parser::{Expression, ExpressionParser, ParseError};
 use pest::Parser;
 
 mod evaluate;
 mod parser;
-
-pub type ParseResult = Result<Expression, ParseError>;
 
 impl ExpressionParser {
     #[allow(clippy::result_large_err)]

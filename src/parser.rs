@@ -7,6 +7,8 @@ use thiserror::Error;
 #[grammar = "grammar.pest"]
 pub struct ExpressionParser;
 
+pub type ParseResult = Result<Expression, ParseError>;
+
 lazy_static::lazy_static! {
     static ref PRATT_PARSER: PrattParser<Rule> = {
         use pest::pratt_parser::{Assoc::*, Op};
