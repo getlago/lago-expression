@@ -23,7 +23,7 @@ mod tests {
 
     #[test]
     fn test_parse_expression() {
-        let input = "1"; // Replace with a valid expression
+        let input = "1";
         match ExpressionParser::parse_expression(input) {
             Ok(expr) => {
                 assert_eq!(expr, Expression::Decimal(1.into()))
@@ -34,7 +34,7 @@ mod tests {
 
     #[test]
     fn test_parse_event_attribute() {
-        let input = "event.timestamp"; // Replace with a valid expression
+        let input = "event.timestamp";
         match ExpressionParser::parse_expression(input) {
             Ok(expr) => {
                 assert_eq!(expr, Expression::EventAttribute(EventAttribute::Timestamp))
@@ -45,7 +45,7 @@ mod tests {
 
     #[test]
     fn test_parse_event_properties() {
-        let input = "event.properties.blah"; // Replace with a valid expression
+        let input = "event.properties.blah";
         match ExpressionParser::parse_expression(input) {
             Ok(expr) => {
                 assert_eq!(
