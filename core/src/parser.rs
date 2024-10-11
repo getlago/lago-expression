@@ -8,29 +8,16 @@ use thiserror::Error;
 pub struct ExpressionParser;
 
 pub type ParseResult = Result<Expression, ParseError>;
+use pest::pratt_parser::{Assoc::*, Op};
 
-lazy_static::lazy_static! {
-    static ref PRATT_PARSER: PrattParser<Rule> = {
-        use pest::pratt_parser::{Assoc::*, Op};
-        use Rule::*;
-
-        // Precedence is defined lowest to highest
-        PrattParser::new()
-            // Addition and subtract have equal precedence
-            .op(Op::infix(add, Left) | Op::infix(subtract, Left))
-            .op(Op::infix(multiply, Left) | Op::infix(divide, Left))
-            .op(Op::prefix(unary_minus))
-    };
-}
-
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Function {
     Concat(Vec<Expression>),
     Ceil(Box<Expression>),
     Round(Box<Expression>, Option<Box<Expression>>),
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Expression {
     Variable(String),
     Function(Function),
@@ -39,7 +26,7 @@ pub enum Expression {
     UnaryMinus(Box<Expression>),
     BinOp {
         lhs: Box<Expression>,
-        op: Op,
+        op: Operation,
         rhs: Box<Expression>,
     },
 }
@@ -50,8 +37,8 @@ pub enum ParseError {
     FailedToParse(#[from] ::pest::error::Error<Rule>),
 }
 
-#[derive(Debug)]
-pub enum Op {
+#[derive(Debug, PartialEq)]
+pub enum Operation {
     Add,
     Subtract,
     Multiply,
@@ -72,7 +59,11 @@ pub fn parse_function(pairs: Pairs<Rule>) -> Function {
 }
 
 pub fn parse_expr(pairs: Pairs<Rule>) -> Expression {
-    PRATT_PARSER
+    PrattParser::new()
+        // Addition and subtract have equal precedence
+        .op(Op::infix(Rule::add, Left) | Op::infix(Rule::subtract, Left))
+        .op(Op::infix(Rule::multiply, Left) | Op::infix(Rule::divide, Left))
+        .op(Op::prefix(Rule::unary_minus))
         .map_primary(|primary| match primary.as_rule() {
             Rule::function => Expression::Function(parse_function(primary.into_inner())),
             Rule::decimal => Expression::Decimal(primary.as_str().parse().unwrap()),
@@ -83,10 +74,10 @@ pub fn parse_expr(pairs: Pairs<Rule>) -> Expression {
         })
         .map_infix(|lhs, op, rhs| {
             let op = match op.as_rule() {
-                Rule::add => Op::Add,
-                Rule::subtract => Op::Subtract,
-                Rule::multiply => Op::Multiply,
-                Rule::divide => Op::Divide,
+                Rule::add => Operation::Add,
+                Rule::subtract => Operation::Subtract,
+                Rule::multiply => Operation::Multiply,
+                Rule::divide => Operation::Divide,
                 rule => unreachable!("Expr::parse expected infix operation, found {:?}", rule),
             };
             Expression::BinOp {
@@ -97,7 +88,7 @@ pub fn parse_expr(pairs: Pairs<Rule>) -> Expression {
         })
         .map_prefix(|op, rhs| match op.as_rule() {
             Rule::unary_minus => Expression::UnaryMinus(Box::new(rhs)),
-            _ => unreachable!(),
+            rule => unreachable!("Expr::parse expected operation, found {:?}", rule),
         })
         .parse(pairs)
 }

@@ -1,3 +1,12 @@
-import { greet } from "./pkg";
+import { parseExpression } from "./pkg";
 
-greet("World");
+var elem = document.getElementById("expression");
+var output = document.getElementById("expression-output");
+
+elem.oninput = function () {
+  try {
+    output.innerHTML = parseExpression(elem.value);
+  } catch (error) {
+    console.error(error);
+  }
+};

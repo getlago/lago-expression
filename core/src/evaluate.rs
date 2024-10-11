@@ -3,7 +3,7 @@ use std::{collections::HashMap, fmt::Display};
 use bigdecimal::BigDecimal;
 use thiserror::Error;
 
-use crate::parser::{Expression, Function, Op};
+use crate::parser::{Expression, Function, Operation};
 
 #[derive(Debug)]
 pub enum ExpressionValue {
@@ -85,7 +85,7 @@ impl Expression {
     }
 }
 
-impl Op {
+impl Operation {
     pub fn evaluate(
         &self,
         lhs: &Expression,
@@ -96,10 +96,10 @@ impl Op {
         let rhs_decimal = rhs.evaluate(map)?.to_decimal()?;
 
         let evaluated = match self {
-            Op::Add => lhs_decimal + rhs_decimal,
-            Op::Subtract => lhs_decimal - rhs_decimal,
-            Op::Multiply => lhs_decimal * rhs_decimal,
-            Op::Divide => lhs_decimal / rhs_decimal,
+            Operation::Add => lhs_decimal + rhs_decimal,
+            Operation::Subtract => lhs_decimal - rhs_decimal,
+            Operation::Multiply => lhs_decimal * rhs_decimal,
+            Operation::Divide => lhs_decimal / rhs_decimal,
         };
 
         Ok(evaluated.into())

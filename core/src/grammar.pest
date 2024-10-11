@@ -11,7 +11,7 @@ string = ${ "'" ~ string_contents ~ "'" }
 
 string_contents = @{ (!"'" ~ ANY)* }
 
-variable = @{ "event." ~ ASCII_ALPHA ~ (ASCII_ALPHANUMERIC | "_" | ".")* }
+variable = @{ ASCII_ALPHA ~ (ASCII_ALPHANUMERIC | "_")* }
 decimal  = @{ (ASCII_DIGIT | ".")+ }
 
 unary_minus =  { "-" }
