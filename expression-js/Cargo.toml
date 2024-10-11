@@ -8,5 +8,5 @@ crate-type = ["cdylib"]
 
 [dependencies]
 console_error_panic_hook = "0.1.7"
-lago_expression = { path = '../core' }
+expression-core = { path = '../expression-core' }
 wasm-bindgen = "0.2.95"

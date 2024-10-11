@@ -1,11 +1,23 @@
 use bigdecimal::BigDecimal;
 use pest::iterators::Pairs;
 use pest::pratt_parser::PrattParser;
+use pest::Parser;
 use thiserror::Error;
 
 #[derive(pest_derive::Parser)]
 #[grammar = "grammar.pest"]
 pub struct ExpressionParser;
+
+impl ExpressionParser {
+    #[allow(clippy::result_large_err)]
+    pub fn parse_expression(input: &str) -> ParseResult {
+        let mut pairs = Self::parse(Rule::root, input)?;
+
+        let inner = pairs.next().unwrap().into_inner();
+        let expr = parse_expr(inner);
+        Ok(expr)
+    }
+}
 
 pub type ParseResult = Result<Expression, ParseError>;
 use pest::pratt_parser::{Assoc::*, Op};
@@ -52,7 +64,7 @@ pub enum Operation {
     Divide,
 }
 
-pub fn parse_function(pairs: Pairs<Rule>) -> Function {
+fn parse_function(pairs: Pairs<Rule>) -> Function {
     let mut iter = pairs.into_iter();
     let name = iter.next().unwrap();
     match name.as_rule() {
@@ -65,7 +77,7 @@ pub fn parse_function(pairs: Pairs<Rule>) -> Function {
     }
 }
 
-pub fn parse_event_attribute(mut pairs: Pairs<Rule>) -> EventAttribute {
+fn parse_event_attribute(mut pairs: Pairs<Rule>) -> EventAttribute {
     let mut inner = pairs.next().unwrap().into_inner();
     match inner.next().unwrap().as_rule() {
         Rule::event_code => EventAttribute::Code,
@@ -77,7 +89,7 @@ pub fn parse_event_attribute(mut pairs: Pairs<Rule>) -> EventAttribute {
     }
 }
 
-pub fn parse_expr(pairs: Pairs<Rule>) -> Expression {
+fn parse_expr(pairs: Pairs<Rule>) -> Expression {
     PrattParser::new()
         // Addition and subtract have equal precedence
         .op(Op::infix(Rule::add, Left) | Op::infix(Rule::subtract, Left))
@@ -112,4 +124,45 @@ pub fn parse_expr(pairs: Pairs<Rule>) -> Expression {
             rule => unreachable!("Expr::parse expected operation, found {:?}", rule),
         })
         .parse(pairs)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_expression() {
+        let input = "1";
+        match ExpressionParser::parse_expression(input) {
+            Ok(expr) => {
+                assert_eq!(expr, Expression::Decimal(1.into()))
+            }
+            Err(e) => panic!("Failed to parse expression: {:?}", e),
+        }
+    }
+
+    #[test]
+    fn test_parse_event_attribute() {
+        let input = "event.timestamp";
+        match ExpressionParser::parse_expression(input) {
+            Ok(expr) => {
+                assert_eq!(expr, Expression::EventAttribute(EventAttribute::Timestamp))
+            }
+            Err(e) => panic!("Failed to parse expression: {:?}", e),
+        }
+    }
+
+    #[test]
+    fn test_parse_event_properties() {
+        let input = "event.properties.blah";
+        match ExpressionParser::parse_expression(input) {
+            Ok(expr) => {
+                assert_eq!(
+                    expr,
+                    Expression::EventAttribute(EventAttribute::Properties("blah".to_owned()))
+                )
+            }
+            Err(e) => panic!("Failed to parse expression: {:?}", e),
+        }
+    }
 }
