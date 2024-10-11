@@ -65,9 +65,16 @@ pub fn parse_function(pairs: Pairs<Rule>) -> Function {
     }
 }
 
-pub fn parse_event_attribute(pairs: Pairs<Rule>) -> EventAttribute {
-    dbg!(&pairs);
-    EventAttribute::Code
+pub fn parse_event_attribute(mut pairs: Pairs<Rule>) -> EventAttribute {
+    let mut inner = pairs.next().unwrap().into_inner();
+    match inner.next().unwrap().as_rule() {
+        Rule::event_code => EventAttribute::Code,
+        Rule::event_timestamp => EventAttribute::Timestamp,
+        Rule::event_properties => {
+            EventAttribute::Properties(inner.next().unwrap().as_str().to_owned())
+        }
+        rule => unreachable!("expected an event attribute, got: {rule:?}"),
+    }
 }
 
 pub fn parse_expr(pairs: Pairs<Rule>) -> Expression {

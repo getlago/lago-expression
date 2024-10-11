@@ -17,6 +17,8 @@ impl ExpressionParser {
 }
 #[cfg(test)]
 mod tests {
+    use parser::EventAttribute;
+
     use super::*;
 
     #[test]
@@ -25,6 +27,31 @@ mod tests {
         match ExpressionParser::parse_expression(input) {
             Ok(expr) => {
                 assert_eq!(expr, Expression::Decimal(1.into()))
+            }
+            Err(e) => panic!("Failed to parse expression: {:?}", e),
+        }
+    }
+
+    #[test]
+    fn test_parse_event_attribute() {
+        let input = "event.timestamp"; // Replace with a valid expression
+        match ExpressionParser::parse_expression(input) {
+            Ok(expr) => {
+                assert_eq!(expr, Expression::EventAttribute(EventAttribute::Timestamp))
+            }
+            Err(e) => panic!("Failed to parse expression: {:?}", e),
+        }
+    }
+
+    #[test]
+    fn test_parse_event_properties() {
+        let input = "event.properties.blah"; // Replace with a valid expression
+        match ExpressionParser::parse_expression(input) {
+            Ok(expr) => {
+                assert_eq!(
+                    expr,
+                    Expression::EventAttribute(EventAttribute::Properties("blah".to_owned()))
+                )
             }
             Err(e) => panic!("Failed to parse expression: {:?}", e),
         }
