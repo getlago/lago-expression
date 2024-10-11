@@ -33,7 +33,7 @@ pub enum Expression {
 
 #[derive(Error, Debug)]
 pub enum ParseError {
-    #[error("Failed to parse")]
+    #[error("Parsing error: {0}")]
     FailedToParse(#[from] ::pest::error::Error<Rule>),
 }
 

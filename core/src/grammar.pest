@@ -11,7 +11,13 @@ string = ${ "'" ~ string_contents ~ "'" }
 
 string_contents = @{ (!"'" ~ ANY)* }
 
-variable = @{ ASCII_ALPHA ~ (ASCII_ALPHANUMERIC | "_")* }
+variable_prefix  = _{ "event." }
+event_attributes = ${ event_timestamp | event_properties ~ "." ~ ASCII_ALPHA ~ (ASCII_ALPHANUMERIC | "_")* | event_code }
+event_timestamp  =  { "timestamp" }
+event_properties =  { "properties" }
+event_code       =  { "code" }
+
+variable = ${ variable_prefix ~ event_attributes }
 decimal  = @{ (ASCII_DIGIT | ".")+ }
 
 unary_minus =  { "-" }

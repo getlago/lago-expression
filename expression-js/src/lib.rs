@@ -1,6 +1,6 @@
 use wasm_bindgen::prelude::*;
 
-use lago_expression::{ExpressionParser, Parser, Rule};
+use lago_expression::ExpressionParser;
 extern crate console_error_panic_hook;
 
 #[wasm_bindgen(start)]
