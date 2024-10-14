@@ -6,6 +6,7 @@ Gem::Specification.new do |spec|
   spec.extensions = ['ext/lago_expression/extconf.rb']
   spec.required_ruby_version = '3.2'
 
+  spec.add_dependency 'bigdecimal'
   spec.add_development_dependency 'libclang', '~> 14'
   spec.add_development_dependency 'rake-compiler', '~> 1.2'
   spec.add_development_dependency 'rb_sys', '~> 0.9'

@@ -1,4 +1,4 @@
-pub use evaluate::EvaluationResult;
+pub use evaluate::{EvaluationResult, Event, ExpressionValue};
 pub use parser::{Expression, ExpressionParser, ParseError};
 pub use pest::Parser;
 

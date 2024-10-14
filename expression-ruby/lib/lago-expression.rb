@@ -1,1 +1,3 @@
-require_relative 'lago-expression/lago-expression'
+require 'bigdecimal/util'
+
+require_relative 'lago_expression/lago_expression'

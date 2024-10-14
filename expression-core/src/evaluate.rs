@@ -14,9 +14,9 @@ pub enum ExpressionValue {
 
 #[derive(Debug, Default, PartialEq, Deserialize)]
 pub struct Event {
-    code: String,
-    timestamp: u64,
-    properties: HashMap<String, String>,
+    pub code: String,
+    pub timestamp: u64,
+    pub properties: HashMap<String, String>,
 }
 
 impl Expression {
