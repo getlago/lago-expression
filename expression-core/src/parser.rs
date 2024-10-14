@@ -9,9 +9,8 @@ use thiserror::Error;
 pub struct ExpressionParser;
 
 impl ExpressionParser {
-    #[allow(clippy::result_large_err)]
     pub fn parse_expression(input: &str) -> ParseResult<Expression> {
-        let mut pairs = Self::parse(Rule::root, input)?;
+        let mut pairs = Self::parse(Rule::root, input).map_err(|_| ParseError::FailedToParse)?;
 
         let inner = pairs.next().unwrap().into_inner();
         parse_expr(inner)
@@ -50,8 +49,8 @@ pub enum Expression {
 
 #[derive(Error, Debug)]
 pub enum ParseError {
-    #[error("Parsing error: {0}")]
-    FailedToParse(#[from] ::pest::error::Error<Rule>),
+    #[error("Parsing error")]
+    FailedToParse,
 
     #[error("Wrong number of arguments to function {0}, expected: {1}, provided: {2}")]
     WrongNumberOfArguments(String, String, usize),

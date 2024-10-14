@@ -6,17 +6,34 @@ use thiserror::Error;
 
 use crate::parser::{EventAttribute, Expression, Function, Operation};
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum ExpressionValue {
     Number(BigDecimal),
     String(String),
 }
 
-#[derive(Debug, PartialEq, Deserialize)]
+#[derive(Debug, Default, PartialEq, Deserialize)]
 pub struct Event {
     code: String,
     timestamp: u64,
     properties: HashMap<String, String>,
+}
+
+impl Expression {
+    pub fn evaluate(&self, event: &Event) -> EvaluationResult<ExpressionValue> {
+        let evaluated_expr = match self {
+            Expression::EventAttribute(attr) => attr.evaluate(event)?,
+            Expression::Function(f) => f.evaluate(event)?,
+            Expression::String(s) => s.clone().into(),
+            Expression::Decimal(d) => d.clone().into(),
+            Expression::UnaryMinus(inner) => {
+                ExpressionValue::Number(-(inner.evaluate(event)?.to_decimal()?))
+            }
+            Expression::BinOp { lhs, op, rhs } => op.evaluate(lhs.as_ref(), rhs.as_ref(), event)?,
+        };
+
+        Ok(evaluated_expr)
+    }
 }
 
 impl ExpressionValue {
@@ -32,9 +49,6 @@ impl ExpressionValue {
 pub enum ExpressionError {
     #[error("Expected a decimal")]
     ExpectedDecimal,
-
-    #[error("Expected {0} arguments")]
-    MissingArguments(usize),
 
     #[error("Variable: {0} not found")]
     MissingVariable(String),
@@ -77,31 +91,20 @@ impl EventAttribute {
         let evaluated_attribute = match self {
             EventAttribute::Code => event.code.to_owned().into(),
             EventAttribute::Timestamp => ExpressionValue::Number(event.timestamp.into()),
-            EventAttribute::Properties(name) => event
-                .properties
-                .get(name)
-                .ok_or(ExpressionError::MissingVariable(name.clone()))?
-                .clone()
-                .into(),
+            EventAttribute::Properties(name) => {
+                let value = event
+                    .properties
+                    .get(name)
+                    .ok_or(ExpressionError::MissingVariable(name.clone()))?;
+
+                if let Ok(decimal_value) = value.parse() {
+                    ExpressionValue::Number(decimal_value)
+                } else {
+                    ExpressionValue::String(value.clone())
+                }
+            }
         };
         Ok(evaluated_attribute)
-    }
-}
-
-impl Expression {
-    pub fn evaluate(&self, event: &Event) -> EvaluationResult<ExpressionValue> {
-        let evaluated_expr = match self {
-            Expression::EventAttribute(attr) => attr.evaluate(event)?,
-            Expression::Function(f) => f.evaluate(event)?,
-            Expression::String(s) => s.clone().into(),
-            Expression::Decimal(d) => d.clone().into(),
-            Expression::UnaryMinus(inner) => {
-                ExpressionValue::Number(-(inner.evaluate(event)?.to_decimal()?))
-            }
-            Expression::BinOp { lhs, op, rhs } => op.evaluate(lhs.as_ref(), rhs.as_ref(), event)?,
-        };
-
-        Ok(evaluated_expr)
     }
 }
 
@@ -123,5 +126,78 @@ impl Operation {
         };
 
         Ok(evaluated.into())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn evaluate_and_compare(expr: Expression, event: &Event, expected_result: ExpressionValue) {
+        match expr.evaluate(event) {
+            Ok(expr) => {
+                assert_eq!(expr, expected_result)
+            }
+            Err(e) => panic!("Failed to evalaute expression: {:?}", e),
+        }
+    }
+
+    #[test]
+    fn test_evaluate_bigdecimal() {
+        let expr = Expression::Decimal(123.into());
+        let event = Event {
+            code: "code".into(),
+            ..Default::default()
+        };
+        evaluate_and_compare(expr, &event, ExpressionValue::Number(123.into()));
+    }
+
+    #[test]
+    fn test_evaluate_event_attribute_code() {
+        let expr = Expression::EventAttribute(EventAttribute::Code);
+        let event = Event {
+            code: "code".into(),
+            ..Default::default()
+        };
+        evaluate_and_compare(expr, &event, ExpressionValue::String("code".into()));
+    }
+
+    #[test]
+    fn test_evaluate_event_attribute_timestamp() {
+        let expr = Expression::EventAttribute(EventAttribute::Timestamp);
+        let event = Event {
+            timestamp: 1234,
+            ..Default::default()
+        };
+        evaluate_and_compare(expr, &event, ExpressionValue::Number(1234.into()));
+    }
+
+    #[test]
+    fn test_evaluate_event_attribute_property_decimal() {
+        let expr = Expression::EventAttribute(EventAttribute::Properties("bar".into()));
+        let properties = vec![("bar".into(), "123".into())].into_iter().collect();
+        let event = Event {
+            properties,
+            ..Default::default()
+        };
+        evaluate_and_compare(expr, &event, ExpressionValue::Number(123.into()));
+    }
+
+    #[test]
+    fn test_evaluate_event_attribute_property_no_decimal() {
+        let expr = Expression::EventAttribute(EventAttribute::Properties("bar".into()));
+        let properties = vec![("bar".into(), "foo".into())].into_iter().collect();
+        let event = Event {
+            properties,
+            ..Default::default()
+        };
+        evaluate_and_compare(expr, &event, ExpressionValue::String("foo".into()));
+    }
+
+    #[test]
+    fn test_evaluate_string() {
+        let expr = Expression::String("bar".into());
+        let event = Default::default();
+        evaluate_and_compare(expr, &event, ExpressionValue::String("bar".into()));
     }
 }
