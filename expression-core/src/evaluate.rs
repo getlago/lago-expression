@@ -145,10 +145,7 @@ mod tests {
     #[test]
     fn test_evaluate_bigdecimal() {
         let expr = Expression::Decimal(123.into());
-        let event = Event {
-            code: "code".into(),
-            ..Default::default()
-        };
+        let event = Default::default();
         evaluate_and_compare(expr, &event, ExpressionValue::Number(123.into()));
     }
 
@@ -156,10 +153,10 @@ mod tests {
     fn test_evaluate_event_attribute_code() {
         let expr = Expression::EventAttribute(EventAttribute::Code);
         let event = Event {
-            code: "code".into(),
+            code: "result_code".into(),
             ..Default::default()
         };
-        evaluate_and_compare(expr, &event, ExpressionValue::String("code".into()));
+        evaluate_and_compare(expr, &event, ExpressionValue::String("result_code".into()));
     }
 
     #[test]
@@ -199,5 +196,55 @@ mod tests {
         let expr = Expression::String("bar".into());
         let event = Default::default();
         evaluate_and_compare(expr, &event, ExpressionValue::String("bar".into()));
+    }
+
+    #[test]
+    fn test_evaluate_binop_plus() {
+        let expr = Expression::BinOp {
+            lhs: Box::new(Expression::Decimal(2.into())),
+            op: Operation::Add,
+            rhs: Box::new(Expression::Decimal(4.into())),
+        };
+        let event = Default::default();
+        evaluate_and_compare(expr, &event, ExpressionValue::Number(6.into()));
+    }
+
+    #[test]
+    fn test_evaluate_binop_minus() {
+        let expr = Expression::BinOp {
+            lhs: Box::new(Expression::Decimal(2.into())),
+            op: Operation::Subtract,
+            rhs: Box::new(Expression::Decimal(4.into())),
+        };
+        let event = Default::default();
+        evaluate_and_compare(expr, &event, ExpressionValue::Number((-2).into()));
+    }
+
+    #[test]
+    fn test_evaluate_binop_multiply() {
+        let expr = Expression::BinOp {
+            lhs: Box::new(Expression::Decimal(2.into())),
+            op: Operation::Multiply,
+            rhs: Box::new(Expression::Decimal(4.into())),
+        };
+        let event = Default::default();
+        evaluate_and_compare(expr, &event, ExpressionValue::Number(8.into()));
+    }
+
+    #[test]
+    fn test_evaluate_binop_divide() {
+        let expr = Expression::BinOp {
+            lhs: Box::new(Expression::Decimal(4.into())),
+            op: Operation::Divide,
+            rhs: Box::new(Expression::Decimal(2.into())),
+        };
+        let event = Default::default();
+        evaluate_and_compare(expr, &event, ExpressionValue::Number(2.into()));
+    }
+    #[test]
+    fn test_evaluate_unary_minus() {
+        let expr = Expression::UnaryMinus(Box::new(Expression::Decimal(12.into())));
+        let event = Default::default();
+        evaluate_and_compare(expr, &event, ExpressionValue::Number((-12).into()));
     }
 }
