@@ -3,5 +3,5 @@ resolver = "2"
 members = [
   "expression-core",
   "expression-js",
-  "expression-ruby/ext/lago-expression",
+  "expression-ruby/ext/lago_expression",
 ]
