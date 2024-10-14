@@ -1,0 +1,9 @@
+# frozen_string_literal: true
+
+require 'rb_sys/extensiontask'
+
+GEMSPEC = Gem::Specification.load('lago-expression.gemspec')
+
+RbSys::ExtensionTask.new('lago-expression', GEMSPEC) do |c|
+  c.lib_dir = 'lib/lago-expression'
+end

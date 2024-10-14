@@ -1,3 +1,7 @@
 [workspace]
 resolver = "2"
-members = ["expression-core", "expression-js"]
+members = [
+  "expression-core",
+  "expression-js",
+  "expression-ruby/ext/lago-expression",
+]
