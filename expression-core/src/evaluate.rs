@@ -1,6 +1,6 @@
 use std::{collections::HashMap, fmt::Display};
 
-use bigdecimal::BigDecimal;
+use bigdecimal::{BigDecimal, RoundingMode, ToPrimitive};
 use serde::Deserialize;
 use thiserror::Error;
 
@@ -77,11 +77,39 @@ impl Display for ExpressionValue {
 }
 
 impl Function {
-    pub fn evaluate(&self, _event: &Event) -> EvaluationResult<ExpressionValue> {
+    pub fn evaluate(&self, event: &Event) -> EvaluationResult<ExpressionValue> {
         match self {
-            Function::Concat(_) => todo!(),
-            Function::Ceil(_) => todo!(),
-            Function::Round(_, _) => todo!(),
+            Function::Concat(args) => {
+                let evaluated_args = args
+                    .iter()
+                    .map(|e| e.evaluate(event).map(|v| v.to_string()))
+                    .collect::<EvaluationResult<Vec<String>>>()?;
+
+                Ok(ExpressionValue::String(evaluated_args.concat()))
+            }
+            Function::Ceil(expr) => {
+                let evaluated_decimal = expr.evaluate(event)?.to_decimal()?;
+                Ok(ExpressionValue::Number(
+                    evaluated_decimal.with_scale_round(0, RoundingMode::Ceiling),
+                ))
+            }
+            Function::Round(expr, None) => {
+                let evaluated_decimal = expr.evaluate(event)?.to_decimal()?;
+                Ok(ExpressionValue::Number(
+                    evaluated_decimal.with_scale_round(0, RoundingMode::HalfUp),
+                ))
+            }
+            Function::Round(expr, Some(digit_expr)) => {
+                let evaluated_decimal = expr.evaluate(event)?.to_decimal()?;
+                let round_digits = digit_expr
+                    .evaluate(event)?
+                    .to_decimal()?
+                    .to_i64()
+                    .ok_or(ExpressionError::ExpectedDecimal)?;
+                Ok(ExpressionValue::Number(
+                    evaluated_decimal.with_scale_round(round_digits, RoundingMode::HalfUp),
+                ))
+            }
         }
     }
 }
@@ -241,10 +269,55 @@ mod tests {
         let event = Default::default();
         evaluate_and_compare(expr, &event, ExpressionValue::Number(2.into()));
     }
+
     #[test]
     fn test_evaluate_unary_minus() {
         let expr = Expression::UnaryMinus(Box::new(Expression::Decimal(12.into())));
         let event = Default::default();
         evaluate_and_compare(expr, &event, ExpressionValue::Number((-12).into()));
+    }
+
+    #[test]
+    fn test_evaluate_round() {
+        let expr = Expression::Function(Function::Round(
+            Box::new(Expression::Decimal("12.5".parse::<BigDecimal>().unwrap())),
+            None,
+        ));
+        let event = Default::default();
+        evaluate_and_compare(expr, &event, ExpressionValue::Number(13.into()));
+    }
+
+    #[test]
+    fn test_evaluate_round_two_args() {
+        let expr = Expression::Function(Function::Round(
+            Box::new(Expression::Decimal("12.345".parse::<BigDecimal>().unwrap())),
+            Some(Box::new(Expression::Decimal(2.into()))),
+        ));
+        let event = Default::default();
+        evaluate_and_compare(
+            expr,
+            &event,
+            ExpressionValue::Number("12.35".parse::<BigDecimal>().unwrap()),
+        );
+    }
+
+    #[test]
+    fn test_evaluate_ceil() {
+        let expr = Expression::Function(Function::Ceil(Box::new(Expression::Decimal(
+            "12.3".parse::<BigDecimal>().unwrap(),
+        ))));
+        let event = Default::default();
+        evaluate_and_compare(expr, &event, ExpressionValue::Number(13.into()));
+    }
+
+    #[test]
+    fn test_evaluate_concat() {
+        let expr = Expression::Function(Function::Concat(vec![
+            Expression::String("test".into()),
+            Expression::String("-".into()),
+            Expression::String("123".into()),
+        ]));
+        let event = Default::default();
+        evaluate_and_compare(expr, &event, ExpressionValue::String("test-123".into()));
     }
 }
