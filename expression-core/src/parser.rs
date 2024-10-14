@@ -165,4 +165,46 @@ mod tests {
             Err(e) => panic!("Failed to parse expression: {:?}", e),
         }
     }
+
+    #[test]
+    fn test_parse_string() {
+        let input = "'test'";
+        match ExpressionParser::parse_expression(input) {
+            Ok(expr) => {
+                assert_eq!(expr, Expression::String("test".to_owned()))
+            }
+            Err(e) => panic!("Failed to parse expression: {:?}", e),
+        }
+    }
+
+    #[test]
+    fn test_parse_concat() {
+        let input = "concat('a', 'b')";
+        match ExpressionParser::parse_expression(input) {
+            Ok(expr) => {
+                assert_eq!(
+                    expr,
+                    Expression::Function(Function::Concat(vec![
+                        Expression::String("a".to_owned()),
+                        Expression::String("b".to_owned()),
+                    ]))
+                )
+            }
+            Err(e) => panic!("Failed to parse expression: {:?}", e),
+        }
+    }
+
+    #[test]
+    fn test_parse_ceil() {
+        let input = "ceil(123)";
+        match ExpressionParser::parse_expression(input) {
+            Ok(expr) => {
+                assert_eq!(
+                    expr,
+                    Expression::Function(Function::Ceil(Box::new(Expression::Decimal(123.into()))))
+                )
+            }
+            Err(e) => panic!("Failed to parse expression: {:?}", e),
+        }
+    }
 }

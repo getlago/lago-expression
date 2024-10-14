@@ -1,3 +1,4 @@
+use expression_core::Expression;
 use magnus::{function, Error, Ruby};
 
 #[magnus::init]

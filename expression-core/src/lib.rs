@@ -1,4 +1,5 @@
-pub use parser::{Expression, ExpressionParser, ParseError, Rule};
+pub use evaluate::EvaluationResult;
+pub use parser::{Expression, ExpressionParser, ParseError};
 pub use pest::Parser;
 
 mod evaluate;
