@@ -43,13 +43,15 @@ fn evaluate(
 
 #[magnus::init]
 fn init(ruby: &Ruby) -> Result<(), Error> {
-    let class = ruby.define_class("ExpressionParser", ruby.class_object())?;
+    let module = ruby.define_module("Lago")?;
+
+    let class = module.define_class("ExpressionParser", ruby.class_object())?;
     class.define_singleton_method("parse", function!(parse, 1))?;
 
-    let class = ruby.define_class("Expression", ruby.class_object())?;
+    let class = module.define_class("Expression", ruby.class_object())?;
     class.define_method("evaluate", method!(evaluate, 1))?;
 
-    let class = ruby.define_class("Event", ruby.class_object())?;
+    let class = module.define_class("Event", ruby.class_object())?;
     class.define_singleton_method("new", function!(EventWrapper::new, 3))?;
 
     Ok(())
