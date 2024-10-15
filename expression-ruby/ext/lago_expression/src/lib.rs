@@ -19,20 +19,25 @@ impl EventWrapper {
     }
 }
 
-fn parse(input: String) -> ExpressionWrapper {
-    ExpressionWrapper(ExpressionParser::parse_expression(&input).unwrap())
+fn parse(input: String) -> Option<ExpressionWrapper> {
+    ExpressionParser::parse_expression(&input)
+        .ok()
+        .map(ExpressionWrapper)
 }
 
-fn evaluate(ruby: &Ruby, expr: &ExpressionWrapper, event: &EventWrapper) -> magnus::Value {
+fn evaluate(
+    ruby: &Ruby,
+    expr: &ExpressionWrapper,
+    event: &EventWrapper,
+) -> Result<magnus::Value, magnus::Error> {
     let evaluated = expr.0.evaluate(&event.0).unwrap();
 
     match evaluated {
         ExpressionValue::Number(d) => d
             .to_string()
             .into_value_with(ruby)
-            .funcall_public("to_d", ())
-            .unwrap(),
-        ExpressionValue::String(s) => s.into_value_with(ruby),
+            .funcall_public("to_d", ()),
+        ExpressionValue::String(s) => Ok(s.into_value_with(ruby)),
     }
 }
 
