@@ -17,6 +17,10 @@ jobs:
         working-directory: ./expression-ruby
     steps:
       - uses: actions/checkout@v4
+      - name: Set up Ruby 3.3
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
       - name: install dependencies
         run: bundle install
       - name: build
