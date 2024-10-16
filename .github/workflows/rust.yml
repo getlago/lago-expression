@@ -1,4 +1,4 @@
-name: Ruby
+name: Rust
 
 on:
   push:
@@ -14,10 +14,10 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./expression-ruby
+        working-directory: ./expression-core
     steps:
       - uses: actions/checkout@v4
       - name: Build
-        run: rake compile
+        run: cargo build --verbose
       - name: Run tests
-        run: rake spec
+        run: cargo test --verbose
