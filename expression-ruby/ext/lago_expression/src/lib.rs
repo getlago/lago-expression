@@ -3,10 +3,10 @@ use std::collections::HashMap;
 use expression_core::{Event, Expression, ExpressionParser, ExpressionValue};
 use magnus::{function, method, value::ReprValue, Error, IntoValue, Module, Object, Ruby};
 
-#[magnus::wrap(class = "Expression", free_immediately, size)]
+#[magnus::wrap(class = "Lago::Expression", free_immediately, size)]
 struct ExpressionWrapper(Expression);
 
-#[magnus::wrap(class = "Event", free_immediately, size)]
+#[magnus::wrap(class = "Lago::Event", free_immediately, size)]
 struct EventWrapper(Event);
 
 impl EventWrapper {
