@@ -3,6 +3,7 @@ PATH
   specs:
     lago-expression (0.0.1)
       bigdecimal
+      libclang (~> 14)
       rake (~> 13)
       rake-compiler (~> 1.2)
       rb_sys (~> 0.9.63)
@@ -44,7 +45,6 @@ PLATFORMS
 
 DEPENDENCIES
   lago-expression!
-  libclang (~> 14)
   rspec (~> 3)
 
 RUBY VERSION
