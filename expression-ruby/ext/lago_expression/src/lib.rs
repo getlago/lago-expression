@@ -19,10 +19,20 @@ impl EventWrapper {
     }
 }
 
+/// Parse the given input and return an Optional ExpressionWrapper,
+/// will return None when the expression is not valid
 fn parse(input: String) -> Option<ExpressionWrapper> {
     ExpressionParser::parse_expression(&input)
         .ok()
         .map(ExpressionWrapper)
+}
+
+/// Validate the given expression, returns None if the expression is Valid
+/// an String is returned if the expression is invalid
+fn validate(input: String) -> Option<String> {
+    ExpressionParser::parse_expression(&input)
+        .err()
+        .map(|e| e.to_string())
 }
 
 fn evaluate(
@@ -47,6 +57,7 @@ fn init(ruby: &Ruby) -> Result<(), Error> {
 
     let class = module.define_class("ExpressionParser", ruby.class_object())?;
     class.define_singleton_method("parse", function!(parse, 1))?;
+    class.define_singleton_method("validate", function!(validate, 1))?;
 
     let class = module.define_class("Expression", ruby.class_object())?;
     class.define_method("evaluate", method!(evaluate, 1))?;
