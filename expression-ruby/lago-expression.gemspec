@@ -10,9 +10,9 @@ Gem::Specification.new do |spec|
   spec.extensions = ['ext/lago_expression/Cargo.toml']
 
   spec.add_dependency 'bigdecimal'
+  spec.add_dependency 'libclang', '~> 14'
   spec.add_dependency 'rake', '~> 13'
   spec.add_dependency 'rake-compiler', '~> 1.2'
   spec.add_dependency 'rb_sys', '~> 0.9.63'
-  spec.add_development_dependency 'libclang', '~> 14'
   spec.add_development_dependency 'rspec', '~> 3'
 end
