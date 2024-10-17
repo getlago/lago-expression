@@ -3,7 +3,6 @@ PATH
   specs:
     lago-expression (0.0.1)
       bigdecimal
-      libclang (~> 14)
       rake (~> 13)
       rake-compiler (~> 1.2)
       rb_sys (~> 0.9.63)
@@ -13,11 +12,6 @@ GEM
   specs:
     bigdecimal (3.1.8)
     diff-lcs (1.5.1)
-    libclang (14.0.6-aarch64-linux)
-    libclang (14.0.6-arm64-darwin)
-    libclang (14.0.6-x86_64-darwin)
-    libclang (14.0.6-x86_64-linux)
-    libclang (14.0.6-x86_64-linux-musl)
     rake (13.2.1)
     rake-compiler (1.2.8)
       rake
