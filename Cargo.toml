@@ -4,4 +4,5 @@ members = [
   "expression-core",
   "expression-js",
   "expression-ruby/ext/lago_expression",
+  "expression-go",
 ]
