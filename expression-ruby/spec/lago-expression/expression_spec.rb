@@ -14,6 +14,14 @@ RSpec.describe Lago::Expression do
       end
     end
 
+    context "failing evaluation" do
+      let(:expression) { Lago::ExpressionParser.parse('event.properties.does_not_exists') }
+
+      it "raises an error" do
+        expect {expression.evaluate(event)}.to raise_error(RuntimeError, /does_not_exists not found/)
+      end
+    end
+
     context "with a simple string expression" do
       let(:expression) { Lago::ExpressionParser.parse("'test'") }
 

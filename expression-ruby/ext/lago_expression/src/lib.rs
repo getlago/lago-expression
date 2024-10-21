@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use expression_core::{Event, Expression, ExpressionParser, ExpressionValue};
-use magnus::{function, method, value::ReprValue, Error, IntoValue, Module, Object, Ruby};
+use magnus::{error, function, method, value::ReprValue, Error, IntoValue, Module, Object, Ruby};
 
 #[magnus::wrap(class = "Lago::Expression", free_immediately, size)]
 struct ExpressionWrapper(Expression);
@@ -39,8 +39,11 @@ fn evaluate(
     ruby: &Ruby,
     expr: &ExpressionWrapper,
     event: &EventWrapper,
-) -> Result<magnus::Value, magnus::Error> {
-    let evaluated = expr.0.evaluate(&event.0).unwrap();
+) -> error::Result<magnus::Value> {
+    let evaluated = expr
+        .0
+        .evaluate(&event.0)
+        .map_err(|err| Error::new(ruby.exception_runtime_error(), err.to_string()))?;
 
     match evaluated {
         ExpressionValue::Number(d) => d
