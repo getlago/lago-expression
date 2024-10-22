@@ -7,7 +7,7 @@ package main
 import "C"
 
 func main() {
-	cs := C.CString("1+2")
+	cs := C.CString("event.timestamp+event.properties.a")
 	event := C.CString("{\"code\":\"123\",\"timestamp\":2,\"properties\":{\"a\": \"123\"}}")
 	expr := C.parse(cs)
 
