@@ -29,7 +29,7 @@ pub fn parse_expression(expression: String) -> Result<Expression, String> {
 pub fn evaluate_expression(
     expression: Expression,
     code: String,
-    timestamp: u64,
+    timestamp: u32,
     js_properties: &JsValue,
 ) -> Result<JsValue, JsValue> {
     let mut properties = HashMap::new();
@@ -43,7 +43,7 @@ pub fn evaluate_expression(
         let insert = if value.is_string() {
             String::try_from(value)?
         } else {
-            let n = u64::try_from(value)?;
+            let n = f64::try_from(value)?;
             format!("{n}")
         };
 
@@ -52,7 +52,7 @@ pub fn evaluate_expression(
 
     let event = expression_core::Event {
         code,
-        timestamp,
+        timestamp: timestamp.into(),
         properties,
     };
 

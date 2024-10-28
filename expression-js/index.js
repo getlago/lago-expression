@@ -10,10 +10,10 @@ elem.oninput = function () {
   error.innerHTML = "";
   try {
     expression = parseExpression(elem.value);
-    output.innerHTML = evaluateExpression(expression, "code", BigInt(1231254123), {
-      started_at: BigInt(123124123),
-      ended_at: BigInt(1241231241),
-      replicas: BigInt(8),
+    output.innerHTML = evaluateExpression(expression, "code", 1231254123, {
+      started_at: 123124123,
+      ended_at: 1241231241,
+      replicas: 8,
     });
   } catch (e) {
     error.innerHTML = e;
