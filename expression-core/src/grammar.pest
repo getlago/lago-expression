@@ -1,9 +1,10 @@
 function = { function_name ~ "(" ~ function_args ~ ")" }
 
-function_name = _{ ceil | concat | round }
-ceil          =  { "ceil" }
-concat        =  { "concat" }
-round         =  { "round" }
+function_name = _{ ceil | concat | round | floor }
+ceil          =  { "ceil" | "CEIL" | "Ceil" }
+concat        =  { "concat" | "CONCAT" | "Concat" }
+round         =  { "round" | "ROUND" | "Round" }
+floor         =  { "floor" | "FLOOR" | "Floor" }
 
 function_args = _{ expr ~ ("," ~ expr)* }
 

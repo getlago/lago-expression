@@ -23,8 +23,9 @@ pub type ParseResult<T> = Result<T, ParseError>;
 #[derive(Debug, PartialEq)]
 pub enum Function {
     Concat(Vec<Expression>),
-    Ceil(Box<Expression>),
+    Ceil(Box<Expression>, Option<Box<Expression>>),
     Round(Box<Expression>, Option<Box<Expression>>),
+    Floor(Box<Expression>, Option<Box<Expression>>),
 }
 
 #[derive(Debug, PartialEq)]
@@ -72,7 +73,6 @@ fn parse_function(pairs: Pairs<Rule>) -> ParseResult<Function> {
     let mut iter = pairs.into_iter();
     let name = iter.next().unwrap();
     let function = match name.as_rule() {
-        Rule::ceil => Function::Ceil(Box::new(parse_expr(iter)?)),
         Rule::concat => {
             let args = iter
                 .map(|r| parse_expr(r.into_inner()))
@@ -80,29 +80,34 @@ fn parse_function(pairs: Pairs<Rule>) -> ParseResult<Function> {
 
             Function::Concat(args)
         }
-        Rule::round => {
-            let mut args = iter
-                .map(|r| {
-                    let expr = parse_expr(r.into_inner())?;
-                    Ok(Box::new(expr))
-                })
-                .collect::<Vec<ParseResult<Box<Expression>>>>();
-
-            match args.len() {
-                1 => Function::Round(args.remove(0)?, None),
-                2 => Function::Round(args.remove(0)?, Some(args.remove(0)?)),
-                n => {
-                    return Err(ParseError::WrongNumberOfArguments(
-                        "round".to_owned(),
-                        "1..2".to_owned(),
-                        n,
-                    ))
-                }
-            }
-        }
+        Rule::ceil => parse_function_with_args(Function::Ceil, iter)?,
+        Rule::round => parse_function_with_args(Function::Round, iter)?,
+        Rule::floor => parse_function_with_args(Function::Floor, iter)?,
         rule => unreachable!("Expected function name, got :{:?}", rule),
     };
     Ok(function)
+}
+
+fn parse_function_with_args<F>(f: F, iter: Pairs<Rule>) -> ParseResult<Function>
+where
+    F: Fn(Box<Expression>, Option<Box<Expression>>) -> Function,
+{
+    let mut args = iter
+        .map(|r| {
+            let expr = parse_expr(r.into_inner())?;
+            Ok(Box::new(expr))
+        })
+        .collect::<Vec<ParseResult<Box<Expression>>>>();
+
+    match args.len() {
+        1 => Ok(f(args.remove(0)?, None)),
+        2 => Ok(f(args.remove(0)?, Some(args.remove(0)?))),
+        n => Err(ParseError::WrongNumberOfArguments(
+            "round".to_owned(),
+            "1..2".to_owned(),
+            n,
+        )),
+    }
 }
 
 fn parse_event_attribute(mut pairs: Pairs<Rule>) -> EventAttribute {
@@ -218,15 +223,53 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_ceil() {
+    fn test_parse_concat_uppercase() {
         parse_and_compare(
-            "ceil(123)",
-            Expression::Function(Function::Ceil(Box::new(Expression::Decimal(123.into())))),
+            "CONCAT('a', 'b')",
+            Expression::Function(Function::Concat(vec![
+                Expression::String("a".to_owned()),
+                Expression::String("b".to_owned()),
+            ])),
         );
     }
 
     #[test]
-    fn test_parse_round() {
+    fn test_parse_concat_capitalized() {
+        parse_and_compare(
+            "Concat('a', 'b')",
+            Expression::Function(Function::Concat(vec![
+                Expression::String("a".to_owned()),
+                Expression::String("b".to_owned()),
+            ])),
+        );
+    }
+
+    #[test]
+    fn test_parse_ceil() {
+        parse_and_compare(
+            "ceil(123)",
+            Expression::Function(Function::Ceil(
+                Box::new(Expression::Decimal(123.into())),
+                None,
+            )),
+        );
+    }
+
+    #[test]
+    fn test_parse_ceil_one_arg() {
+        parse_and_compare(
+            "ceil(123, -1)",
+            Expression::Function(Function::Ceil(
+                Box::new(Expression::Decimal(123.into())),
+                Some(Box::new(Expression::UnaryMinus(Box::new(
+                    Expression::Decimal(1.into()),
+                )))),
+            )),
+        );
+    }
+
+    #[test]
+    fn test_parse_round_one_arg() {
         parse_and_compare(
             "round(123, 1)",
             Expression::Function(Function::Round(
@@ -236,10 +279,31 @@ mod tests {
         );
     }
     #[test]
-    fn test_parse_round_one_arg() {
+    fn test_parse_round() {
         parse_and_compare(
             "round(123)",
             Expression::Function(Function::Round(
+                Box::new(Expression::Decimal(123.into())),
+                None,
+            )),
+        );
+    }
+
+    #[test]
+    fn test_parse_floor_one_arg() {
+        parse_and_compare(
+            "floor(123, 1)",
+            Expression::Function(Function::Floor(
+                Box::new(Expression::Decimal(123.into())),
+                Some(Box::new(Expression::Decimal(1.into()))),
+            )),
+        );
+    }
+    #[test]
+    fn test_parse_floor() {
+        parse_and_compare(
+            "floor(123)",
+            Expression::Function(Function::Floor(
                 Box::new(Expression::Decimal(123.into())),
                 None,
             )),

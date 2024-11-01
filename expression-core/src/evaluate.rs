@@ -87,10 +87,16 @@ impl Function {
 
                 Ok(ExpressionValue::String(evaluated_args.concat()))
             }
-            Function::Ceil(expr) => {
+            Function::Ceil(expr, None) => {
                 let evaluated_decimal = expr.evaluate(event)?.to_decimal()?;
                 Ok(ExpressionValue::Number(
                     evaluated_decimal.with_scale_round(0, RoundingMode::Ceiling),
+                ))
+            }
+            Function::Floor(expr, None) => {
+                let evaluated_decimal = expr.evaluate(event)?.to_decimal()?;
+                Ok(ExpressionValue::Number(
+                    evaluated_decimal.with_scale_round(0, RoundingMode::Floor),
                 ))
             }
             Function::Round(expr, None) => {
@@ -108,6 +114,28 @@ impl Function {
                     .ok_or(ExpressionError::ExpectedDecimal)?;
                 Ok(ExpressionValue::Number(
                     evaluated_decimal.with_scale_round(round_digits, RoundingMode::HalfUp),
+                ))
+            }
+            Function::Ceil(expr, Some(digit_expr)) => {
+                let evaluated_decimal = expr.evaluate(event)?.to_decimal()?;
+                let round_digits = digit_expr
+                    .evaluate(event)?
+                    .to_decimal()?
+                    .to_i64()
+                    .ok_or(ExpressionError::ExpectedDecimal)?;
+                Ok(ExpressionValue::Number(
+                    evaluated_decimal.with_scale_round(round_digits, RoundingMode::Ceiling),
+                ))
+            }
+            Function::Floor(expr, Some(digit_expr)) => {
+                let evaluated_decimal = expr.evaluate(event)?.to_decimal()?;
+                let round_digits = digit_expr
+                    .evaluate(event)?
+                    .to_decimal()?
+                    .to_i64()
+                    .ok_or(ExpressionError::ExpectedDecimal)?;
+                Ok(ExpressionValue::Number(
+                    evaluated_decimal.with_scale_round(round_digits, RoundingMode::Floor),
                 ))
             }
         }
@@ -303,11 +331,50 @@ mod tests {
 
     #[test]
     fn test_evaluate_ceil() {
-        let expr = Expression::Function(Function::Ceil(Box::new(Expression::Decimal(
-            "12.3".parse::<BigDecimal>().unwrap(),
-        ))));
+        let expr = Expression::Function(Function::Ceil(
+            Box::new(Expression::Decimal("12.3".parse::<BigDecimal>().unwrap())),
+            None,
+        ));
         let event = Default::default();
         evaluate_and_compare(expr, &event, ExpressionValue::Number(13.into()));
+    }
+
+    #[test]
+    fn test_evaluate_ceil_with_arg() {
+        let expr = Expression::Function(Function::Ceil(
+            Box::new(Expression::Decimal("12.351".parse::<BigDecimal>().unwrap())),
+            Some(Box::new(Expression::Decimal(1.into()))),
+        ));
+        let event = Default::default();
+        evaluate_and_compare(
+            expr,
+            &event,
+            ExpressionValue::Number("12.4".parse::<BigDecimal>().unwrap()),
+        );
+    }
+
+    #[test]
+    fn test_evaluate_floor() {
+        let expr = Expression::Function(Function::Floor(
+            Box::new(Expression::Decimal("12.3".parse::<BigDecimal>().unwrap())),
+            None,
+        ));
+        let event = Default::default();
+        evaluate_and_compare(expr, &event, ExpressionValue::Number(12.into()));
+    }
+
+    #[test]
+    fn test_evaluate_floor_with_arg() {
+        let expr = Expression::Function(Function::Floor(
+            Box::new(Expression::Decimal("12.351".parse::<BigDecimal>().unwrap())),
+            Some(Box::new(Expression::Decimal(1.into()))),
+        ));
+        let event = Default::default();
+        evaluate_and_compare(
+            expr,
+            &event,
+            ExpressionValue::Number("12.3".parse::<BigDecimal>().unwrap()),
+        );
     }
 
     #[test]
