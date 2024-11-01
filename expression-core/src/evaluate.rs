@@ -87,59 +87,47 @@ impl Function {
 
                 Ok(ExpressionValue::String(evaluated_args.concat()))
             }
-            Function::Ceil(expr, None) => {
-                let evaluated_decimal = expr.evaluate(event)?.to_decimal()?;
-                Ok(ExpressionValue::Number(
-                    evaluated_decimal.with_scale_round(0, RoundingMode::Ceiling),
-                ))
-            }
-            Function::Floor(expr, None) => {
-                let evaluated_decimal = expr.evaluate(event)?.to_decimal()?;
-                Ok(ExpressionValue::Number(
-                    evaluated_decimal.with_scale_round(0, RoundingMode::Floor),
-                ))
-            }
-            Function::Round(expr, None) => {
-                let evaluated_decimal = expr.evaluate(event)?.to_decimal()?;
-                Ok(ExpressionValue::Number(
-                    evaluated_decimal.with_scale_round(0, RoundingMode::HalfUp),
-                ))
-            }
-            Function::Round(expr, Some(digit_expr)) => {
-                let evaluated_decimal = expr.evaluate(event)?.to_decimal()?;
-                let round_digits = digit_expr
-                    .evaluate(event)?
-                    .to_decimal()?
-                    .to_i64()
-                    .ok_or(ExpressionError::ExpectedDecimal)?;
-                Ok(ExpressionValue::Number(
-                    evaluated_decimal.with_scale_round(round_digits, RoundingMode::HalfUp),
-                ))
-            }
-            Function::Ceil(expr, Some(digit_expr)) => {
-                let evaluated_decimal = expr.evaluate(event)?.to_decimal()?;
-                let round_digits = digit_expr
-                    .evaluate(event)?
-                    .to_decimal()?
-                    .to_i64()
-                    .ok_or(ExpressionError::ExpectedDecimal)?;
-                Ok(ExpressionValue::Number(
-                    evaluated_decimal.with_scale_round(round_digits, RoundingMode::Ceiling),
-                ))
-            }
-            Function::Floor(expr, Some(digit_expr)) => {
-                let evaluated_decimal = expr.evaluate(event)?.to_decimal()?;
-                let round_digits = digit_expr
-                    .evaluate(event)?
-                    .to_decimal()?
-                    .to_i64()
-                    .ok_or(ExpressionError::ExpectedDecimal)?;
-                Ok(ExpressionValue::Number(
-                    evaluated_decimal.with_scale_round(round_digits, RoundingMode::Floor),
-                ))
-            }
+            Function::Round(expr, digit_expr) => evaluate_with_rounding_mode(
+                expr.as_ref(),
+                digit_expr.as_ref().map(AsRef::as_ref),
+                event,
+                RoundingMode::HalfUp,
+            ),
+            Function::Ceil(expr, digit_expr) => evaluate_with_rounding_mode(
+                expr.as_ref(),
+                digit_expr.as_ref().map(AsRef::as_ref),
+                event,
+                RoundingMode::Ceiling,
+            ),
+            Function::Floor(expr, digit_expr) => evaluate_with_rounding_mode(
+                expr.as_ref(),
+                digit_expr.as_ref().map(AsRef::as_ref),
+                event,
+                RoundingMode::Floor,
+            ),
         }
     }
+}
+
+fn evaluate_with_rounding_mode(
+    expr: &Expression,
+    digits: Option<&Expression>,
+    event: &Event,
+    rounding_mode: RoundingMode,
+) -> EvaluationResult<ExpressionValue> {
+    let evaluated_decimal = expr.evaluate(event)?.to_decimal()?;
+    let round_digits = match digits {
+        Some(digit_expr) => digit_expr
+            .evaluate(event)?
+            .to_decimal()?
+            .to_i64()
+            .ok_or(ExpressionError::ExpectedDecimal)?,
+        None => 0,
+    };
+
+    Ok(ExpressionValue::Number(
+        evaluated_decimal.with_scale_round(round_digits, rounding_mode),
+    ))
 }
 
 impl EventAttribute {
