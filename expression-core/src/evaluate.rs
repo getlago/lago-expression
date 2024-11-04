@@ -1,22 +1,17 @@
-use std::{collections::HashMap, fmt::Display};
+use std::fmt::Display;
 
 use bigdecimal::{BigDecimal, RoundingMode, ToPrimitive};
-use serde::Deserialize;
 use thiserror::Error;
 
-use crate::parser::{EventAttribute, Expression, Function, Operation};
+use crate::{
+    parser::{EventAttribute, Expression, Function, Operation},
+    Event, PropertyValue,
+};
 
 #[derive(Debug, PartialEq)]
 pub enum ExpressionValue {
     Number(BigDecimal),
     String(String),
-}
-
-#[derive(Debug, Default, PartialEq, Deserialize)]
-pub struct Event {
-    pub code: String,
-    pub timestamp: u64,
-    pub properties: HashMap<String, String>,
 }
 
 impl Expression {
@@ -141,10 +136,15 @@ impl EventAttribute {
                     .get(name)
                     .ok_or(ExpressionError::MissingVariable(name.clone()))?;
 
-                if let Ok(decimal_value) = value.parse() {
-                    ExpressionValue::Number(decimal_value)
-                } else {
-                    ExpressionValue::String(value.clone())
+                match value {
+                    PropertyValue::String(s) => {
+                        if let Ok(decimal_value) = s.parse() {
+                            ExpressionValue::Number(decimal_value)
+                        } else {
+                            ExpressionValue::String(s.clone())
+                        }
+                    }
+                    PropertyValue::Number(d) => ExpressionValue::Number(d.to_owned()),
                 }
             }
         };

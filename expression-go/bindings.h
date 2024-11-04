@@ -3,16 +3,14 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-typedef struct Expression Expression;
+/**
+ * # Safety
+ * Pass in a valid strings
+ */
+char *evaluate(const char *input, const char *event);
 
 /**
  * # Safety
- * Pass in a valid string
+ * Only pass in pointers to strings that have been obtained through `evaluate`
  */
-Expression *parse(const char *input);
-
-/**
- * # Safety
- * Pass in a valid string
- */
-const char *evaluate(Expression *expr, const char *event);
+void free_evaluate(char *ptr);

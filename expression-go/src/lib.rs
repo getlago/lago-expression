@@ -1,32 +1,43 @@
-use std::ffi::{c_char, CStr, CString};
+use std::{
+    ffi::{c_char, CStr, CString},
+    ptr::null_mut,
+};
 
-use expression_core::{Event, Expression, ExpressionParser};
+use expression_core::ExpressionParser;
 
 #[no_mangle]
 /// # Safety
-/// Pass in a valid string
-pub unsafe extern "C" fn parse(input: *const c_char) -> *mut Expression {
+/// Pass in a valid strings
+pub unsafe extern "C" fn evaluate(input: *const c_char, event: *const c_char) -> *mut c_char {
     let input = unsafe { CStr::from_ptr(input).to_str().unwrap().to_owned() };
-    let expression = ExpressionParser::parse_expression(&input).unwrap();
-    Box::into_raw(Box::new(expression))
+
+    // Cannot parse expression -> return null
+    let Ok(expr) = ExpressionParser::parse_expression(&input) else {
+        return null_mut();
+    };
+
+    let json = unsafe { CStr::from_ptr(event).to_str().unwrap() };
+
+    // TODO: solve the fact that json will contain numbers, deserialize will fail as it's expecting only
+    // strings. in the Event::properties which is a HashMap<String, String>
+    let Ok(event) = serde_json::from_str(json) else {
+        return null_mut();
+    };
+
+    // evaluate expression, errors are not returned, but we do catch them and return null
+    let Ok(res) = expr.evaluate(&event) else {
+        return null_mut();
+    };
+
+    let Ok(temp) = CString::new(res.to_string()) else {
+        return null_mut();
+    };
+    temp.into_raw()
 }
 
 #[no_mangle]
 /// # Safety
-/// Pass in a valid string
-pub unsafe extern "C" fn evaluate(expr: *mut Expression, event: *const c_char) -> *const c_char {
-    let json = unsafe { CStr::from_ptr(event).to_str().unwrap() };
-    let event: Event = serde_json::from_str(json).unwrap();
-
-    let expr = unsafe { expr.as_ref().unwrap() };
-    match expr.evaluate(&event).unwrap() {
-        expression_core::ExpressionValue::Number(d) => {
-            let temp = CString::new(d.to_string()).unwrap();
-            temp.into_raw()
-        }
-        expression_core::ExpressionValue::String(d) => {
-            let temp = CString::new(d).unwrap();
-            temp.into_raw()
-        }
-    }
+/// Only pass in pointers to strings that have been obtained through `evaluate`
+pub unsafe extern "C" fn free_evaluate(ptr: *mut c_char) {
+    unsafe { drop(CString::from_raw(ptr)) }
 }

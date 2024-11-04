@@ -3,10 +3,9 @@ use std::collections::HashMap;
 use js_sys::Reflect;
 use wasm_bindgen::prelude::*;
 
-use bigdecimal::ToPrimitive;
+use bigdecimal::{BigDecimal, FromPrimitive, ToPrimitive};
 
-use expression_core::{ExpressionParser, ExpressionValue};
-use web_sys::console;
+use expression_core::{ExpressionParser, ExpressionValue, PropertyValue};
 extern crate console_error_panic_hook;
 
 #[wasm_bindgen(start)]
@@ -29,7 +28,7 @@ pub fn parse_expression(expression: String) -> Result<Expression, String> {
 pub fn evaluate_expression(
     expression: Expression,
     code: String,
-    timestamp: u32,
+    timestamp: u64,
     js_properties: &JsValue,
 ) -> Result<JsValue, JsValue> {
     let mut properties = HashMap::new();
@@ -38,21 +37,25 @@ pub fn evaluate_expression(
 
     for key in keys {
         let value = Reflect::get(js_properties, &key)?;
-        console::log_1(&value);
 
-        let insert = if value.is_string() {
-            String::try_from(value)?
+        let property_value = if value.is_string() {
+            String::try_from(value)?.into()
+        } else if value.is_bigint() {
+            let n = u64::try_from(value)?;
+            PropertyValue::Number(n.into())
         } else {
             let n = f64::try_from(value)?;
-            format!("{n}")
+            PropertyValue::Number(
+                BigDecimal::from_f64(n).ok_or("failed to convert property value")?,
+            )
         };
 
-        properties.insert(key.as_string().ok_or("expected string")?, insert);
+        properties.insert(key.as_string().ok_or("expected string")?, property_value);
     }
 
     let event = expression_core::Event {
         code,
-        timestamp: timestamp.into(),
+        timestamp,
         properties,
     };
 
