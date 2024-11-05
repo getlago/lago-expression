@@ -1,7 +1,10 @@
 use std::collections::HashMap;
 
-use expression_core::{Event, Expression, ExpressionParser, ExpressionValue};
-use magnus::{error, function, method, value::ReprValue, Error, IntoValue, Module, Object, Ruby};
+use expression_core::{Event, Expression, ExpressionParser, ExpressionValue, PropertyValue};
+use magnus::{
+    error, function, method, r_hash::ForEach, value::ReprValue, Error, IntoValue, Module, Object,
+    RHash, Ruby, TryConvert, Value,
+};
 
 #[magnus::wrap(class = "Lago::Expression", free_immediately, size)]
 struct ExpressionWrapper(Expression);
@@ -10,12 +13,35 @@ struct ExpressionWrapper(Expression);
 struct EventWrapper(Event);
 
 impl EventWrapper {
-    fn new(code: String, timestamp: u64, map: HashMap<String, String>) -> EventWrapper {
-        Self(Event {
+    fn new(ruby: &Ruby, code: String, timestamp: u64, map: RHash) -> error::Result<EventWrapper> {
+        let mut properties = HashMap::default();
+
+        map.foreach(|key: String, value: Value| {
+            let property_value = if value.is_kind_of(ruby.class_numeric()) {
+                // Convert ruby numbers to a formatted string, that can be parsed into a BigDecimal
+                let ruby_string = value.to_r_string()?;
+                let big_d = ruby_string
+                    .to_string()?
+                    .parse()
+                    .expect("Failed to parse a number as bigdecimal");
+                PropertyValue::Number(big_d)
+            } else if value.is_kind_of(ruby.class_string()) {
+                PropertyValue::String(String::try_convert(value)?)
+            } else {
+                return Err(magnus::Error::new(
+                    ruby.exception_runtime_error(),
+                    "Expected string or number".to_owned(),
+                ));
+            };
+            properties.insert(key, property_value);
+            Ok(ForEach::Continue)
+        })?;
+
+        Ok(Self(Event {
             code,
             timestamp,
-            properties: map,
-        })
+            properties,
+        }))
     }
 }
 
