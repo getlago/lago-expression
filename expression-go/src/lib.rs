@@ -18,8 +18,6 @@ pub unsafe extern "C" fn evaluate(input: *const c_char, event: *const c_char) ->
 
     let json = unsafe { CStr::from_ptr(event).to_str().unwrap() };
 
-    // TODO: solve the fact that json will contain numbers, deserialize will fail as it's expecting only
-    // strings. in the Event::properties which is a HashMap<String, String>
     let Ok(event) = serde_json::from_str(json) else {
         return null_mut();
     };
