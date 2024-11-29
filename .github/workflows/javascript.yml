@@ -19,8 +19,10 @@ jobs:
         working-directory: ./expression-js
     steps:
       - uses: actions/checkout@v4
-      - name: Install
+      - name: Install wasm-pack
         run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+      - name: Install dependencies
+        run: npm i
       - name: Build
         run: npm run build
       - name: Package
