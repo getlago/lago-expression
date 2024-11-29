@@ -3,6 +3,7 @@ name = "expression-js"
 version = "0.1.0"
 edition = "2021"
 
+
 [lib]
 crate-type = ["cdylib"]
 
@@ -13,3 +14,10 @@ expression-core = { path = '../expression-core' }
 js-sys = "0.3.72"
 wasm-bindgen = "0.2.95"
 web-sys = { version = "0.3.72", features = ["console"] }
+
+[profile.release]
+lto = true
+opt-level = 's'
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false
