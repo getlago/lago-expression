@@ -19,6 +19,10 @@ jobs:
         working-directory: ./expression-js
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          registry-url: https://registry.npmjs.org/
       - name: Install wasm-pack
         run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
       - name: Install dependencies
@@ -27,3 +31,7 @@ jobs:
         run: npm run build
       - name: Package
         run: wasm-pack pack
+      - name: Publish
+        run: wasm-pack publish
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
