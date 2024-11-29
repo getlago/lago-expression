@@ -14,6 +14,7 @@ module.exports = {
       template: "index.html",
     }),
     new WasmPackPlugin({
+      forceMode: "production",
       crateDirectory: path.resolve(__dirname, "."),
     }),
   ],
