@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use expression_core::{Event, Expression, ExpressionParser, ExpressionValue, PropertyValue};
 use magnus::{
     error, function, method, r_hash::ForEach, value::ReprValue, Error, IntoValue, Module, Object,
-    RHash, Ruby, TryConvert, Value,
+    RHash, Ruby, Value,
 };
 
 #[magnus::wrap(class = "Lago::Expression", free_immediately, size)]
@@ -25,8 +25,6 @@ impl EventWrapper {
                     .parse()
                     .expect("Failed to parse a number as bigdecimal");
                 PropertyValue::Number(big_d)
-            } else if value.is_kind_of(ruby.class_string()) {
-                PropertyValue::String(String::try_convert(value)?)
             } else {
                 PropertyValue::String(value.to_string())
             };
