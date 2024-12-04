@@ -6,3 +6,9 @@ members = [
   "expression-ruby/ext/lago_expression",
   "expression-go",
 ]
+
+[profile.release]
+lto = true
+
+[profile.release.package.lago-expression]
+opt-level = 's'
