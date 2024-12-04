@@ -28,10 +28,7 @@ impl EventWrapper {
             } else if value.is_kind_of(ruby.class_string()) {
                 PropertyValue::String(String::try_convert(value)?)
             } else {
-                return Err(magnus::Error::new(
-                    ruby.exception_runtime_error(),
-                    "Expected string or number".to_owned(),
-                ));
+                PropertyValue::String(value.to_string())
             };
             properties.insert(key, property_value);
             Ok(ForEach::Continue)

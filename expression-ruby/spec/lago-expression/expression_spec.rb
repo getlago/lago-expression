@@ -2,7 +2,14 @@ require 'spec_helper'
 
 
 RSpec.describe Lago::Expression do
-  let(:event) { Lago::Event.new("code", 1234, {"property_1" => 1.23, "property_2" => "test", "property_3" => "12.34"}) }
+
+  class Dummy < Struct.new(:v)
+    def to_s
+      v
+    end
+  end
+
+  let(:event) { Lago::Event.new("code", 1234, {"property_1" => 1.23, "dummy" => Dummy.new(1), "decimal_property" => BigDecimal("2.3"), "property_2" => "test", "property_3" => "12.34"}) }
 
   describe '#evaluate' do
     context "with a simple math expression" do
@@ -44,6 +51,22 @@ RSpec.describe Lago::Expression do
 
       it "returns the calculated value" do
         expect(expression.evaluate(event)).to eq("1.23test")
+      end
+    end
+
+    context "with a decimal expression with a decimal value from the event" do
+      let(:expression) { Lago::ExpressionParser.parse("event.properties.property_1 + event.properties.decimal_property") }
+
+      it "returns the calculated value" do
+        expect(expression.evaluate(event)).to eq(3.53)
+      end
+    end
+
+    context "with a non-number / string value in the event payload" do
+      let(:expression) { Lago::ExpressionParser.parse("event.properties.dummy") }
+
+      it "returns the calculated value" do
+        expect(expression.evaluate(event)).not_to be(nil)
       end
     end
 
