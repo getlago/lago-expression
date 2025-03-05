@@ -1,6 +1,6 @@
 Gem::Specification.new do |spec|
   spec.name = 'lago-expression'
-  spec.version = '0.1.3'
+  spec.version = '0.1.4'
   spec.summary = 'gem supporting sql expression evaluation in ruby'
   spec.authors = ['Lago']
   spec.required_ruby_version = '~> 3.3'
