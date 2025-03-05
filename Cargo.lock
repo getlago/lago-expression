@@ -263,7 +263,7 @@ dependencies = [
 
 [[package]]
 name = "expression-core"
-version = "0.1.3"
+version = "0.1.4"
 dependencies = [
  "bigdecimal",
  "lazy_static",
@@ -359,7 +359,7 @@ dependencies = [
 
 [[package]]
 name = "lago-expression"
-version = "0.1.3"
+version = "0.1.4"
 dependencies = [
  "bigdecimal",
  "console_error_panic_hook",
