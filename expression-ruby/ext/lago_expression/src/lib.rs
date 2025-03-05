@@ -34,7 +34,7 @@ impl EventWrapper {
 
         Ok(Self(Event {
             code,
-            timestamp,
+            timestamp: timestamp.into(),
             properties,
         }))
     }

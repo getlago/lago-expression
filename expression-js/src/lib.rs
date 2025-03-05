@@ -55,7 +55,7 @@ pub fn evaluate_expression(
 
     let event = expression_core::Event {
         code,
-        timestamp,
+        timestamp: PropertyValue::Number(timestamp.into()),
         properties,
     };
 

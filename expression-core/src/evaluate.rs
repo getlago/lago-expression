@@ -62,6 +62,21 @@ impl From<BigDecimal> for ExpressionValue {
     }
 }
 
+impl From<PropertyValue> for ExpressionValue {
+    fn from(value: PropertyValue) -> Self {
+        match value {
+            PropertyValue::String(s) => {
+                if let Ok(decimal_value) = s.parse::<BigDecimal>() {
+                    decimal_value.into()
+                } else {
+                    s.into()
+                }
+            }
+            PropertyValue::Number(n) => n.into(),
+        }
+    }
+}
+
 impl Display for ExpressionValue {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -129,7 +144,8 @@ impl EventAttribute {
     pub fn evaluate(&self, event: &Event) -> EvaluationResult<ExpressionValue> {
         let evaluated_attribute = match self {
             EventAttribute::Code => event.code.to_owned().into(),
-            EventAttribute::Timestamp => ExpressionValue::Number(event.timestamp.into()),
+            EventAttribute::Timestamp => event.timestamp.clone().into(),
+
             EventAttribute::Properties(name) => {
                 let value = event
                     .properties
@@ -207,7 +223,7 @@ mod tests {
     fn test_evaluate_event_attribute_timestamp() {
         let expr = Expression::EventAttribute(EventAttribute::Timestamp);
         let event = Event {
-            timestamp: 1234,
+            timestamp: 1234.into(),
             ..Default::default()
         };
         evaluate_and_compare(expr, &event, ExpressionValue::Number(1234.into()));
