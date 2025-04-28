@@ -3,3 +3,4 @@ tmp/
 *.bundle
 .rspec_status
 dist/
+*/.ruby-version
