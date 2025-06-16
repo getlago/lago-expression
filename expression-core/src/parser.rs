@@ -191,6 +191,16 @@ mod tests {
     }
 
     #[test]
+    fn test_parse_invalid_decimal() {
+        let result = ExpressionParser::parse_expression("1.1.1");
+        assert!(
+            matches!(result.as_ref().unwrap_err(), ParseError::FailedToParse(_)),
+            "Expected FailedToParse error, got different error: {:?}",
+            result.unwrap_err()
+        );
+    }
+
+    #[test]
     fn test_parse_event_attribute() {
         parse_and_compare(
             "event.timestamp",
