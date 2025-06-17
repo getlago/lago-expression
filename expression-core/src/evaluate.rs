@@ -198,7 +198,7 @@ mod tests {
             Ok(expr) => {
                 assert_eq!(expr, expected_result)
             }
-            Err(e) => panic!("Failed to evalaute expression: {:?}", e),
+            Err(e) => panic!("Failed to evaluate expression: {:?}", e),
         }
     }
 
@@ -387,6 +387,20 @@ mod tests {
             Expression::String("test".into()),
             Expression::String("-".into()),
             Expression::String("123".into()),
+        ]));
+        let event = Default::default();
+        evaluate_and_compare(expr, &event, ExpressionValue::String("test-123".into()));
+    }
+
+    #[test]
+    fn test_evaluate_nested_functions() {
+        let expr = Expression::Function(Function::Concat(vec![
+            Expression::String("test".into()),
+            Expression::String("-".into()),
+            Expression::Function(Function::Round(
+                Box::new(Expression::Decimal("123".parse::<BigDecimal>().unwrap())),
+                None,
+            )),
         ]));
         let event = Default::default();
         evaluate_and_compare(expr, &event, ExpressionValue::String("test-123".into()));

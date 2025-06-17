@@ -20,7 +20,7 @@ event_code       =  { "code" }
 property_name    =  { ASCII_ALPHA ~ (ASCII_ALPHANUMERIC | "_")* }
 
 variable = @{ variable_prefix ~ event_attributes }
-decimal  = @{ (ASCII_DIGIT | ".")+ }
+decimal  = @{ ASCII_DIGIT+ ~ ("." ~ ASCII_DIGIT+)? }
 
 unary_minus =  { "-" }
 primary     = _{ function | variable | decimal | string | "(" ~ expr ~ ")" }
