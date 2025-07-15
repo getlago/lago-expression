@@ -1,12 +1,14 @@
+# frozen_string_literal: true
+
 Gem::Specification.new do |spec|
   spec.name = 'lago-expression'
-  spec.version = '0.1.5'
+  spec.version = '0.1.6'
   spec.summary = 'gem supporting sql expression evaluation in ruby'
   spec.authors = ['Lago']
   spec.required_ruby_version = '~> 3.4'
-  spec.required_rubygems_version = ">= 3.3.11"
+  spec.required_rubygems_version = '>= 3.3.11'
 
-  spec.require_paths = ["lib"]
+  spec.require_paths = ['lib']
   spec.extensions = ['ext/lago_expression/Cargo.toml']
 
   spec.add_dependency 'bigdecimal'
