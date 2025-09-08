@@ -121,7 +121,7 @@ impl Function {
                     .map(|e| e.evaluate(event).and_then(|v| v.to_decimal()))
                     .collect::<EvaluationResult<Vec<BigDecimal>>>()?
                     .into_iter()
-                    .max().ok_or(ExpressionError::ExpectedDecimal)?;
+                    .min().ok_or(ExpressionError::ExpectedDecimal)?;
                 Ok(ExpressionValue::Number(min_value))
             },
             Function::Max(args) => {

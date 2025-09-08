@@ -111,7 +111,7 @@ RSpec.describe Lago::Expression do
     end
 
     context "with max function property value lower" do
-      let(:expression) { Lago::ExpressionParser.parse("min(event.properties.property_3, 15.0)") }
+      let(:expression) { Lago::ExpressionParser.parse("max(event.properties.property_3, 15.0)") }
 
       it "gets the provided value" do
         expect(expression.evaluate(event)).to eq(15.0)
