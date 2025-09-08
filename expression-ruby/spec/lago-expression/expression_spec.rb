@@ -85,5 +85,37 @@ RSpec.describe Lago::Expression do
         expect(expression.evaluate(event)).to eq(10)
       end
     end
+
+    context "with min function property value higher" do
+      let(:expression) { Lago::ExpressionParser.parse("min(event.properties.property_3, 5.0)") }
+
+      it "gets the provided min" do
+        expect(expression.evaluate(event)).to eq(5.0)
+      end
+    end
+
+    context "with min function property value lower" do
+      let(:expression) { Lago::ExpressionParser.parse("min(event.properties.property_3, 15.0)") }
+
+      it "gets the property value" do
+        expect(expression.evaluate(event)).to eq(12.34)
+      end
+    end
+
+    context "with max function property value higher" do
+      let(:expression) { Lago::ExpressionParser.parse("max(event.properties.property_3, 5.0)") }
+
+      it "gets the property value" do
+        expect(expression.evaluate(event)).to eq(12.34)
+      end
+    end
+
+    context "with max function property value lower" do
+      let(:expression) { Lago::ExpressionParser.parse("min(event.properties.property_3, 15.0)") }
+
+      it "gets the provided value" do
+        expect(expression.evaluate(event)).to eq(15.0)
+      end
+    end
   end
 end
