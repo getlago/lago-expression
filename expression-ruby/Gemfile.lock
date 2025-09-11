@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    lago-expression (0.1.5)
+    lago-expression (0.1.6)
       bigdecimal
       rake (~> 13)
       rake-compiler (~> 1.2)
