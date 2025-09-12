@@ -42,6 +42,9 @@ impl ExpressionValue {
 
 #[derive(Error, Debug)]
 pub enum ExpressionError {
+    #[error("Expected non-empty argument list")]
+    EmptyArgumentList,
+
     #[error("Expected a decimal")]
     ExpectedDecimal,
 
@@ -121,16 +124,16 @@ impl Function {
                     .map(|e| e.evaluate(event).and_then(|v| v.to_decimal()))
                     .collect::<EvaluationResult<Vec<BigDecimal>>>()?
                     .into_iter()
-                    .min().ok_or(ExpressionError::ExpectedDecimal)?;
+                    .min().ok_or(ExpressionError::EmptyArgumentList)?;
                 Ok(ExpressionValue::Number(min_value))
-            },
+            }
             Function::Max(args) => {
                 let max_value = args
                     .iter()
                     .map(|e| e.evaluate(event).and_then(|v| v.to_decimal()))
                     .collect::<EvaluationResult<Vec<BigDecimal>>>()?
                     .into_iter()
-                    .max().ok_or(ExpressionError::ExpectedDecimal)?;
+                    .max().ok_or(ExpressionError::EmptyArgumentList)?;
                 Ok(ExpressionValue::Number(max_value))
             }
         }
