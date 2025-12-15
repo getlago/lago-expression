@@ -26,8 +26,8 @@ pub enum Function {
     Ceil(Box<Expression>, Option<Box<Expression>>),
     Round(Box<Expression>, Option<Box<Expression>>),
     Floor(Box<Expression>, Option<Box<Expression>>),
-    Min(Vec<Box<Expression>>),
-    Max(Vec<Box<Expression>>),
+    Min(Vec<Expression>),
+    Max(Vec<Expression>),
 }
 
 #[derive(Debug, PartialEq)]
@@ -87,15 +87,15 @@ fn parse_function(pairs: Pairs<Rule>) -> ParseResult<Function> {
         Rule::floor => parse_function_with_args(Function::Floor, iter)?,
         Rule::min => {
            let args = iter
-                .map(|r| parse_expr(r.into_inner()).map(Box::new))
-                .collect::<ParseResult<Vec<Box<Expression>>>>()?;
+                .map(|r| parse_expr(r.into_inner()))
+                .collect::<ParseResult<Vec<Expression>>>()?;
 
             Function::Min(args)
         }
         Rule::max => {
             let args = iter
-                .map(|r| parse_expr(r.into_inner()).map(Box::new))
-                .collect::<ParseResult<Vec<Box<Expression>>>>()?;
+                .map(|r| parse_expr(r.into_inner()))
+                .collect::<ParseResult<Vec<Expression>>>()?;
 
             Function::Max(args)
         }
@@ -341,8 +341,8 @@ mod tests {
         parse_and_compare(
             "MIN(1, 2)",
             Expression::Function(Function::Min(vec![
-                Box::new(Expression::Decimal(1.into())),
-                Box::new(Expression::Decimal(2.into())),
+                Expression::Decimal(1.into()),
+                Expression::Decimal(2.into()),
             ])),
         );
     }
@@ -351,8 +351,8 @@ mod tests {
         parse_and_compare(
             "MAX(1, 2)",
             Expression::Function(Function::Max(vec![
-                Box::new(Expression::Decimal(1.into())),
-                Box::new(Expression::Decimal(2.into())),
+                Expression::Decimal(1.into()),
+                Expression::Decimal(2.into()),
             ])),
         );
     }
