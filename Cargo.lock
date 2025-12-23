@@ -263,7 +263,7 @@ dependencies = [
 
 [[package]]
 name = "expression-core"
-version = "0.1.6"
+version = "0.2.0"
 dependencies = [
  "bigdecimal",
  "lazy_static",
@@ -276,7 +276,7 @@ dependencies = [
 
 [[package]]
 name = "expression-go"
-version = "0.1.6"
+version = "0.2.0"
 dependencies = [
  "cbindgen",
  "expression-core",
@@ -359,7 +359,7 @@ dependencies = [
 
 [[package]]
 name = "lago-expression"
-version = "0.1.6"
+version = "0.2.0"
 dependencies = [
  "bigdecimal",
  "console_error_panic_hook",
@@ -371,7 +371,7 @@ dependencies = [
 
 [[package]]
 name = "lago_expression"
-version = "0.1.6"
+version = "0.2.0"
 dependencies = [
  "expression-core",
  "magnus",
@@ -567,18 +567,18 @@ dependencies = [
 
 [[package]]
 name = "rb-sys"
-version = "0.9.111"
+version = "0.9.123"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "becea799ce051c16fb140be80f5e7cf781070f99ca099332383c2b17861249af"
+checksum = "45fb1a185af97ee456f1c9e56dbe6e2e662bec4fdeaf83c4c28e0e6adfb18816"
 dependencies = [
  "rb-sys-build",
 ]
 
 [[package]]
 name = "rb-sys-build"
-version = "0.9.111"
+version = "0.9.123"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "64691175abc704862f60a9ca8ef06174080cc50615f2bf1d4759f46db18b4d29"
+checksum = "a58ebd02d7a6033e6a5f6f8d150c1e9f16506039092b84a73e6bedce6d3adf41"
 dependencies = [
  "bindgen",
  "lazy_static",
