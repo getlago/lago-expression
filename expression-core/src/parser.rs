@@ -26,8 +26,8 @@ pub enum Function {
     Ceil(Box<Expression>, Option<Box<Expression>>),
     Round(Box<Expression>, Option<Box<Expression>>),
     Floor(Box<Expression>, Option<Box<Expression>>),
-    Min(Vec<Expression>),
-    Max(Vec<Expression>),
+    Least(Vec<Expression>),
+    Greatest(Vec<Expression>),
 }
 
 #[derive(Debug, PartialEq)]
@@ -85,19 +85,19 @@ fn parse_function(pairs: Pairs<Rule>) -> ParseResult<Function> {
         Rule::ceil => parse_function_with_args(Function::Ceil, iter)?,
         Rule::round => parse_function_with_args(Function::Round, iter)?,
         Rule::floor => parse_function_with_args(Function::Floor, iter)?,
-        Rule::min => {
-           let args = iter
-                .map(|r| parse_expr(r.into_inner()))
-                .collect::<ParseResult<Vec<Expression>>>()?;
-
-            Function::Min(args)
-        }
-        Rule::max => {
+        Rule::least => {
             let args = iter
                 .map(|r| parse_expr(r.into_inner()))
                 .collect::<ParseResult<Vec<Expression>>>()?;
 
-            Function::Max(args)
+            Function::Least(args)
+        }
+        Rule::greatest => {
+            let args = iter
+                .map(|r| parse_expr(r.into_inner()))
+                .collect::<ParseResult<Vec<Expression>>>()?;
+
+            Function::Greatest(args)
         }
         rule => unreachable!("Expected function name, got :{:?}", rule),
     };
@@ -337,20 +337,20 @@ mod tests {
     }
 
     #[test]
-    fn test_min() {
+    fn test_least() {
         parse_and_compare(
-            "MIN(1, 2)",
-            Expression::Function(Function::Min(vec![
+            "LEAST(1, 2)",
+            Expression::Function(Function::Least(vec![
                 Expression::Decimal(1.into()),
                 Expression::Decimal(2.into()),
             ])),
         );
     }
     #[test]
-    fn test_max() {
+    fn test_greatest() {
         parse_and_compare(
-            "MAX(1, 2)",
-            Expression::Function(Function::Max(vec![
+            "GREATEST(1, 2)",
+            Expression::Function(Function::Greatest(vec![
                 Expression::Decimal(1.into()),
                 Expression::Decimal(2.into()),
             ])),
