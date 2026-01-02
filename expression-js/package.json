@@ -4,6 +4,10 @@
     "build": "webpack",
     "serve": "webpack serve"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/getlago/ago-expression.git"
+  },
   "devDependencies": {
     "@wasm-tool/wasm-pack-plugin": "1.7.0",
     "html-webpack-plugin": "^5.6.0",
