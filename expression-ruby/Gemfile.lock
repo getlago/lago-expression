@@ -1,11 +1,11 @@
 PATH
   remote: .
   specs:
-    lago-expression (0.1.6)
+    lago-expression (0.2.0)
       bigdecimal
       rake (~> 13)
       rake-compiler (~> 1.2)
-      rb_sys (~> 0.9.111)
+      rb_sys (~> 0.9.123)
 
 GEM
   remote: https://rubygems.org/
@@ -15,9 +15,9 @@ GEM
     rake (13.2.1)
     rake-compiler (1.2.8)
       rake
-    rake-compiler-dock (1.9.1)
-    rb_sys (0.9.111)
-      rake-compiler-dock (= 1.9.1)
+    rake-compiler-dock (1.10.0)
+    rb_sys (0.9.123)
+      rake-compiler-dock (= 1.10.0)
     rspec (3.13.0)
       rspec-core (~> 3.13.0)
       rspec-expectations (~> 3.13.0)
@@ -44,7 +44,7 @@ DEPENDENCIES
   rspec (~> 3)
 
 RUBY VERSION
-   ruby 3.4.2p28
+   ruby 3.4.7p58
 
 BUNDLED WITH
    2.5.11
