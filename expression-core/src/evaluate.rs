@@ -118,22 +118,24 @@ impl Function {
                 event,
                 RoundingMode::Floor,
             ),
-            Function::Min(args) => {
+            Function::Least(args) => {
                 let min_value = args
                     .iter()
                     .map(|e| e.evaluate(event).and_then(|v| v.to_decimal()))
                     .collect::<EvaluationResult<Vec<BigDecimal>>>()?
                     .into_iter()
-                    .min().ok_or(ExpressionError::EmptyArgumentList)?;
+                    .min()
+                    .ok_or(ExpressionError::EmptyArgumentList)?;
                 Ok(ExpressionValue::Number(min_value))
             }
-            Function::Max(args) => {
+            Function::Greatest(args) => {
                 let max_value = args
                     .iter()
                     .map(|e| e.evaluate(event).and_then(|v| v.to_decimal()))
                     .collect::<EvaluationResult<Vec<BigDecimal>>>()?
                     .into_iter()
-                    .max().ok_or(ExpressionError::EmptyArgumentList)?;
+                    .max()
+                    .ok_or(ExpressionError::EmptyArgumentList)?;
                 Ok(ExpressionValue::Number(max_value))
             }
         }
