@@ -8,5 +8,5 @@ publish = false
 crate-type = ["cdylib"]
 
 [dependencies]
-magnus = "0.7"
+magnus = "0.8"
 expression-core = { path = "../../../expression-core" }
