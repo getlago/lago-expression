@@ -5,7 +5,7 @@ Gem::Specification.new do |spec|
   spec.version = '0.2.0'
   spec.summary = 'gem supporting sql expression evaluation in ruby'
   spec.authors = ['Lago']
-  spec.required_ruby_version = '~> 3.4'
+  spec.required_ruby_version = '~> 4.0.1'
   spec.required_rubygems_version = '>= 3.3.11'
 
   spec.require_paths = ['lib']
