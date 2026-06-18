@@ -15,9 +15,9 @@ GEM
     rake (13.2.1)
     rake-compiler (1.2.8)
       rake
-    rake-compiler-dock (1.11.0)
-    rb_sys (0.9.124)
-      rake-compiler-dock (= 1.11.0)
+    rake-compiler-dock (1.12.0)
+    rb_sys (0.9.128)
+      rake-compiler-dock (= 1.12.0)
     rspec (3.13.0)
       rspec-core (~> 3.13.0)
       rspec-expectations (~> 3.13.0)
@@ -44,7 +44,7 @@ DEPENDENCIES
   rspec (~> 3)
 
 RUBY VERSION
-  ruby 4.0.2
+  ruby 4.0.5
 
 BUNDLED WITH
-   4.0.4
+  4.0.4
