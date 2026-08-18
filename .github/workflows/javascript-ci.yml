@@ -1,0 +1,136 @@
+name: JavaScript CI
+
+# Guards expression-js on every PR. Without this, a malformed or out-of-sync
+# package-lock.json can land on main unnoticed, and a wasm build that fails
+# silently can sit broken for months: the publish workflow only runs on
+# release, and Dependabot silently stops producing updates for a lockfile it
+# cannot parse.
+on:
+  pull_request:
+    paths:
+      - "expression-js/**"
+      - "expression-core/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - ".github/workflows/javascript-ci.yml"
+  push:
+    branches: [main]
+    paths:
+      - "expression-js/**"
+      - "expression-core/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - ".github/workflows/javascript-ci.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lockfile:
+    name: Lockfile is valid and in sync
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./expression-js
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      # npm ci does reject an unparseable lockfile, but it reports EUSAGE
+      # "no lockfile found", which sends people looking in the wrong place.
+      # Fail first with the real SyntaxError instead. (The reported offset is
+      # where the parse gives up, usually EOF, not the corrupted entry — but
+      # "invalid JSON" beats "file missing" as a starting point.)
+      - name: package-lock.json parses as JSON
+        run: node -e "JSON.parse(require('fs').readFileSync('package-lock.json','utf8')); console.log('package-lock.json is valid JSON')"
+
+      # Fails if the lockfile is out of sync with package.json, which is what
+      # happens when a lockfile is hand-edited instead of regenerated.
+      - name: Install from the lockfile
+        run: npm ci
+
+      # Advisory only. expression-js has no runtime dependencies — every
+      # finding here is build tooling — and a newly published advisory would
+      # otherwise start failing unrelated PRs, including the Dependabot PRs
+      # that would fix it.
+      - name: Audit (advisory)
+        run: npm audit --audit-level=high
+        continue-on-error: true
+
+  wasm:
+    name: wasm bundle builds and is non-empty
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./expression-js
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      # rustup reads expression-js/rust-toolchain.toml, so the pinned channel
+      # and the wasm32 target come from the repo, not from this file.
+      - name: Show resolved toolchain
+        run: |
+          rustup show active-toolchain
+          cargo --version
+
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      # The build above is why this job exists and why it cannot just be
+      # "npm run build". @wasm-tool/wasm-pack-plugin reports a failed
+      # wasm-pack run as a webpack *error* but webpack still exits 0, so
+      # `npm run build` passes while emitting a 0-byte pkg/index.js and a
+      # bundle with no wasm in it. That is how the cargo 1.81 / edition2024
+      # breakage survived from January to August unnoticed. Assert on the
+      # artifacts instead of trusting the exit code.
+      - name: Assert the wasm artifact is real
+        run: |
+          set -euo pipefail
+          wasm=$(find pkg -name '*_bg.wasm' -print -quit)
+          if [ -z "$wasm" ]; then
+            echo "::error::no *_bg.wasm in pkg/ — wasm-pack did not produce a bundle"
+            ls -la pkg/ || echo "pkg/ does not exist"
+            exit 1
+          fi
+          size=$(wc -c < "$wasm")
+          echo "$wasm is $size bytes"
+          if [ "$size" -lt 50000 ]; then
+            echo "::error::$wasm is only $size bytes — expected a real bundle (>50KB)"
+            exit 1
+          fi
+          # 0x00 61 73 6d — the WebAssembly magic number
+          magic=$(head -c 4 "$wasm" | od -An -tx1 | tr -d ' \n')
+          if [ "$magic" != "0061736d" ]; then
+            echo "::error::$wasm does not start with the wasm magic number (got $magic)"
+            exit 1
+          fi
+          echo "wasm magic number OK"
+
+      - name: Assert the webpack bundle references the wasm
+        run: |
+          set -euo pipefail
+          if ! ls dist/*.module.wasm >/dev/null 2>&1; then
+            echo "::error::webpack emitted no .module.wasm — the bundle does not include the wasm"
+            ls -la dist/
+            exit 1
+          fi
+          ls -la dist/
+
+      # Proves the release path works, not just the dev build: this is the
+      # step that fails first in javascript.yml when pkg/ is incomplete.
+      - name: wasm-pack pack
+        run: wasm-pack pack
