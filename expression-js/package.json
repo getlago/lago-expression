@@ -6,7 +6,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/getlago/ago-expression.git"
+    "url": "git+https://github.com/getlago/lago-expression.git"
   },
   "devDependencies": {
     "@wasm-tool/wasm-pack-plugin": "1.7.0",
