@@ -1,0 +1,57 @@
+name: JavaScript CI
+
+# Guards expression-js on every PR. Without this, a malformed or out-of-sync
+# package-lock.json can land on main unnoticed: the publish workflow only runs
+# on release, and Dependabot silently stops producing updates for a lockfile it
+# cannot parse.
+on:
+  pull_request:
+    paths:
+      - "expression-js/package.json"
+      - "expression-js/package-lock.json"
+      - ".github/workflows/javascript-ci.yml"
+  push:
+    branches: [main]
+    paths:
+      - "expression-js/package.json"
+      - "expression-js/package-lock.json"
+      - ".github/workflows/javascript-ci.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lockfile:
+    name: Lockfile is valid and in sync
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./expression-js
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      # npm ci does reject an unparseable lockfile, but it reports EUSAGE
+      # "no lockfile found", which sends people looking in the wrong place.
+      # Fail first with the real SyntaxError instead. (The reported offset is
+      # where the parse gives up, usually EOF, not the corrupted entry — but
+      # "invalid JSON" beats "file missing" as a starting point.)
+      - name: package-lock.json parses as JSON
+        run: node -e "JSON.parse(require('fs').readFileSync('package-lock.json','utf8')); console.log('package-lock.json is valid JSON')"
+
+      # Fails if the lockfile is out of sync with package.json, which is what
+      # happens when a lockfile is hand-edited instead of regenerated.
+      - name: Install from the lockfile
+        run: npm ci
+
+      # Advisory only. expression-js has no runtime dependencies — every
+      # finding here is build tooling — and a newly published advisory would
+      # otherwise start failing unrelated PRs, including the Dependabot PRs
+      # that would fix it.
+      - name: Audit (advisory)
+        run: npm audit --audit-level=high
+        continue-on-error: true

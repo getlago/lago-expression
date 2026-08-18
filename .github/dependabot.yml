@@ -1,0 +1,109 @@
+version: 2
+
+# Schedules are staggered across the week: six ecosystems all firing on Monday
+# can open ~20 PRs at once, which nobody triages.
+updates:
+  # ---------------------------------------------------------------------------
+  # JavaScript / WebAssembly bindings
+  # ---------------------------------------------------------------------------
+  - package-ecosystem: npm
+    directory: /expression-js
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - javascript
+    commit-message:
+      prefix: "chore(deps)"
+      prefix-development: "chore(deps-dev)"
+    groups:
+      webpack:
+        patterns:
+          - "webpack"
+          - "webpack-*"
+          - "html-webpack-plugin"
+          - "@wasm-tool/wasm-pack-plugin"
+
+  # ---------------------------------------------------------------------------
+  # Rust — the root Cargo workspace. Its members (expression-core,
+  # expression-js, expression-go, expression-ruby/ext/lago_expression) all
+  # resolve against the root Cargo.lock, so one entry covers the whole repo.
+  # expression-core/Cargo.lock is vestigial: cargo reports the workspace root
+  # as the resolution root, so that file is never read and needs no entry.
+  #
+  # NOTE: expression-js/rust-toolchain.toml pins channel 1.81, but the root
+  # Cargo.lock already contains edition-2024 crates (wit-bindgen 0.51.0) that
+  # need cargo >= 1.85. Until that pin moves, cargo updates here can land
+  # changes the pinned toolchain cannot build.
+  # ---------------------------------------------------------------------------
+  - package-ecosystem: cargo
+    directory: /
+    schedule:
+      interval: weekly
+      day: tuesday
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - rust
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      wasm-bindgen:
+        patterns:
+          - "wasm-bindgen"
+          - "wasm-bindgen-*"
+          - "js-sys"
+          - "web-sys"
+
+  # ---------------------------------------------------------------------------
+  # Ruby gem
+  # ---------------------------------------------------------------------------
+  - package-ecosystem: bundler
+    directory: /expression-ruby
+    schedule:
+      interval: weekly
+      day: wednesday
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - ruby
+    commit-message:
+      prefix: "chore(deps)"
+
+  # ---------------------------------------------------------------------------
+  # Go module. expression-go/go.mod currently declares no requires, so this
+  # entry is a no-op today — it is here so the first dependency added there
+  # is covered without anyone having to remember this file.
+  # ---------------------------------------------------------------------------
+  - package-ecosystem: gomod
+    directory: /expression-go
+    schedule:
+      interval: weekly
+      day: thursday
+    open-pull-requests-limit: 3
+    labels:
+      - dependencies
+      - go
+    commit-message:
+      prefix: "chore(deps)"
+
+  # ---------------------------------------------------------------------------
+  # GitHub Actions
+  # ---------------------------------------------------------------------------
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: friday
+    open-pull-requests-limit: 3
+    labels:
+      - dependencies
+      - ci
+    commit-message:
+      prefix: "chore(ci)"
+    groups:
+      actions:
+        patterns:
+          - "*"
