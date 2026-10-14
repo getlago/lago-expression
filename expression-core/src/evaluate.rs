@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use bigdecimal::{BigDecimal, RoundingMode, ToPrimitive};
+use bigdecimal::{BigDecimal, RoundingMode, ToPrimitive, Zero};
 use thiserror::Error;
 
 use crate::{
@@ -50,6 +50,9 @@ pub enum ExpressionError {
 
     #[error("Variable: {0} not found")]
     MissingVariable(String),
+
+    #[error("Division by zero")]
+    DivisionByZero,
 }
 
 pub type EvaluationResult<T> = Result<T, ExpressionError>;
@@ -205,6 +208,10 @@ impl Operation {
             Operation::Add => lhs_decimal + rhs_decimal,
             Operation::Subtract => lhs_decimal - rhs_decimal,
             Operation::Multiply => lhs_decimal * rhs_decimal,
+            // BigDecimal panics when dividing by zero, which takes the host process down with it.
+            Operation::Divide if rhs_decimal.is_zero() => {
+                return Err(ExpressionError::DivisionByZero)
+            }
             Operation::Divide => lhs_decimal / rhs_decimal,
         };
 
@@ -323,6 +330,21 @@ mod tests {
         };
         let event = Default::default();
         evaluate_and_compare(expr, &event, ExpressionValue::Number(2.into()));
+    }
+
+    #[test]
+    fn test_evaluate_binop_divide_by_zero() {
+        let expr = Expression::BinOp {
+            lhs: Box::new(Expression::Decimal(1.into())),
+            op: Operation::Divide,
+            rhs: Box::new(Expression::Decimal(0.into())),
+        };
+        let event = Default::default();
+
+        assert!(matches!(
+            expr.evaluate(&event),
+            Err(ExpressionError::DivisionByZero)
+        ));
     }
 
     #[test]

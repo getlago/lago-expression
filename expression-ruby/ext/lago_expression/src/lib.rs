@@ -20,10 +20,13 @@ impl EventWrapper {
             let property_value = if value.is_kind_of(ruby.class_numeric()) {
                 // Convert ruby numbers to a formatted string, that can be parsed into a BigDecimal
                 let ruby_string = value.to_r_string()?;
-                let big_d = ruby_string
-                    .to_string()?
-                    .parse()
-                    .expect("Failed to parse a number as bigdecimal");
+                // Infinity and NaN are numbers in Ruby but not valid decimals: raise instead of panicking.
+                let big_d = ruby_string.to_string()?.parse().map_err(|_| {
+                    Error::new(
+                        ruby.exception_runtime_error(),
+                        "Failed to parse a number as bigdecimal",
+                    )
+                })?;
                 PropertyValue::Number(big_d)
             } else {
                 PropertyValue::String(value.to_string())

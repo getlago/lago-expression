@@ -29,6 +29,19 @@ RSpec.describe Lago::Expression do
       end
     end
 
+    context "when dividing by zero" do
+      it "raises an error instead of crashing" do
+        expect { Lago::ExpressionParser.parse("1 / 0").evaluate(event) }.to raise_error(RuntimeError, /Division by zero/)
+        expect { Lago::ExpressionParser.parse("ceil(-1 / 0)").evaluate(event) }.to raise_error(RuntimeError, /Division by zero/)
+      end
+    end
+
+    context "when an event property is not a finite number" do
+      it "raises an error instead of crashing" do
+        expect { Lago::Event.new("code", 1234, {"value" => Float::INFINITY}) }.to raise_error(RuntimeError, /Failed to parse a number/)
+      end
+    end
+
     context "with a simple string expression" do
       let(:expression) { Lago::ExpressionParser.parse("'test'") }
 
