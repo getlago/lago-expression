@@ -10,3 +10,4 @@ crate-type = ["cdylib"]
 [dependencies]
 magnus = "0.8"
 expression-core = { path = "../../../expression-core" }
+rb-sys = { version = "0.9", default-features = false, features = ["stable-api-compiled-fallback"] }

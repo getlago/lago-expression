@@ -380,6 +380,7 @@ version = "0.2.0"
 dependencies = [
  "expression-core",
  "magnus",
+ "rb-sys",
 ]
 
 [[package]]
